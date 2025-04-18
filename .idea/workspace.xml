@@ -5,14 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b51965f0-19a0-44f1-b648-22f9e7f2b071" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/api-gateway/src/main/java/com/vienext/api_gateway/SecurityConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user-service/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/controller/UserController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/model/User.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/repository/UserRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/service/UserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/JwtAuthenticationFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/RedisConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/model/UserDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/model/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,6 +104,14 @@
       <workItem from="1744763788742" duration="410000" />
       <workItem from="1744764257773" duration="93000" />
       <workItem from="1744764354130" duration="88000" />
+      <workItem from="1744856188015" duration="257000" />
+      <workItem from="1744909476856" duration="100000" />
+      <workItem from="1744943962985" duration="27000" />
+      <workItem from="1744944337224" duration="4000" />
+      <workItem from="1744948579216" duration="56000" />
+      <workItem from="1744948737019" duration="54000" />
+      <workItem from="1744952504648" duration="229000" />
+      <workItem from="1744952759214" duration="53000" />
     </task>
     <servers />
   </component>
