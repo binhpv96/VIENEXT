@@ -5,11 +5,14 @@ import com.vienext.userservice.dto.UserDTO;
 import com.vienext.userservice.model.User;
 import com.vienext.userservice.repository.UserRepository;
 import com.vienext.userservice.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/users")
@@ -42,7 +45,7 @@ public class UserController {
     }
 
     @GetMapping("/auth/success")
-    public ResponseEntity<String> authSuccess(@AuthenticationPrincipal OidcUser oidcUser) {
+    public void authSuccess(@AuthenticationPrincipal OidcUser oidcUser, HttpServletResponse response) throws IOException {
         String email = oidcUser.getEmail();
         String username = oidcUser.getPreferredUsername();
         String role = "ROLE_USER";
@@ -61,6 +64,7 @@ public class UserController {
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
         userService.storeTokenInRedis(user.getUsername(), token);
 
-        return ResponseEntity.ok(token);
+        // Redirect về frontend với token trong query parameter
+        response.sendRedirect("http://localhost:3000/auth/callback?token=" + token);
     }
 }
