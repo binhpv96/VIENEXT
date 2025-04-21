@@ -5,17 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b51965f0-19a0-44f1-b648-22f9e7f2b071" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/JwtAuthenticationFilter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/JwtUtil.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/RedisConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/model/UserDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/GlobalExceptionHandler.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/user-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/JwtAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/JwtUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/config/SecurityConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/model/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/model/UserDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/dto/UserDTO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/java/com/vienext/userservice/service/UserService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/user-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/services/user-service/src/main/resources/application.properties" afterDir="false" />
     </list>
@@ -47,23 +44,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/v0.1-user-service&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.runner&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "feature/v0.1-user-service",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/ADMIN/Documents/workspace/VIENEXT",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "reference.settings.project.maven.runner",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration default="true" type="JetRunConfigurationType">
       <module name="VIENEXT" />
@@ -112,6 +111,9 @@
       <workItem from="1744948737019" duration="54000" />
       <workItem from="1744952504648" duration="229000" />
       <workItem from="1744952759214" duration="53000" />
+      <workItem from="1745179684358" duration="74000" />
+      <workItem from="1745206899538" duration="122000" />
+      <workItem from="1745211086458" duration="225000" />
     </task>
     <servers />
   </component>

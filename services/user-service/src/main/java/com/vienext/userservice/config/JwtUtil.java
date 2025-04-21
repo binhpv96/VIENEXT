@@ -12,8 +12,8 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    private String SECRET_KEY = "your_secret_key";
-    private long EXPIRATION_TIME = 1000 * 60 * 60; // 1 giờ
+    private String SECRET_KEY = "your-secret-key"; // Thay bằng key bảo mật của bạn
+    private long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hour
 
     public String generateToken(String username, String role) {
         Map<String, Object> claims = new HashMap<>();
@@ -28,15 +28,11 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
-    }
-
-    public String extractRole(String token) {
-        return extractAllClaims(token).get("role", String.class);
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+        return Jwts.parser()
+                .setSigningKey(SECRET_KEY)
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
     public boolean isTokenValid(String token, String username) {
@@ -46,5 +42,12 @@ public class JwtUtil {
 
     private boolean isTokenExpired(String token) {
         return extractAllClaims(token).getExpiration().before(new Date());
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(SECRET_KEY)
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

@@ -1,5 +1,6 @@
 package com.vienext.userservice.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -37,7 +39,6 @@ public class SecurityConfig {
                 .map(user -> new org.springframework.security.core.userdetails.User(
                         user.getUsername(),
                         user.getPassword(),
-                        // Ánh xạ role (String) thành một GrantedAuthority
                         java.util.Collections.singletonList(
                                 new org.springframework.security.core.authority.SimpleGrantedAuthority(user.getRole())
                         )))
@@ -52,18 +53,35 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Vô hiệu hóa CSRF
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                        .requestMatchers("/api/users/register", "/api/users/login", "/api/users/auth/google", "/api/users/auth/success").permitAll()
                         .requestMatchers("/api/users/**").hasAnyRole("USER", "VIP")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                        })
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/api/users/auth/google")
+                        .defaultSuccessUrl("/api/users/auth/success", true)
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(oidcUserService())
+                        )
+                )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public OidcUserService oidcUserService() {
+        return new OidcUserService();
     }
 
     @Bean

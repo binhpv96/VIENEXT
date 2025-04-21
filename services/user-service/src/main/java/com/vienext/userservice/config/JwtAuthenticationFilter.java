@@ -25,13 +25,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private UserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
-        this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+        System.out.println("Request URI: " + requestURI);
+        if (requestURI.equals("/api/users/register") || requestURI.equals("/api/users/login") ||
+                requestURI.equals("/api/users/auth/google") || requestURI.equals("/api/users/auth/success")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
