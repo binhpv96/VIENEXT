@@ -65,6 +65,6 @@ public class UserController {
         userService.storeTokenInRedis(user.getUsername(), token);
 
         // Redirect về frontend với token trong query parameter
-        response.sendRedirect("http://localhost:3000/auth/callback?token=" + token);
+        response.sendRedirect("http://localhost:3000/callback?token=" + token);
     }
 }
