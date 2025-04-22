@@ -1,10 +1,13 @@
 package com.vienext.userservice.controller;
 
 import com.vienext.userservice.config.JwtUtil;
+import com.vienext.userservice.dto.LoginDTO;
+import com.vienext.userservice.dto.RegisterDTO;
 import com.vienext.userservice.model.User;
 import com.vienext.userservice.repository.UserRepository;
 import com.vienext.userservice.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -26,13 +29,13 @@ public class UserController {
     private UserRepository userRepository;
 
     @PostMapping("/register")
-    public User register(@RequestParam String username, @RequestParam String email, @RequestParam String password) {
-        return userService.registerUser(username, email, password);
+    public User register(@Valid @RequestBody RegisterDTO registerDTO) {
+        return userService.registerUser(registerDTO);
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password) {
-        return userService.loginUser(username, password);
+    public String login(@Valid @RequestBody LoginDTO loginDTO) {
+        return userService.loginUser(loginDTO);
     }
 
     @GetMapping("/auth/google")
@@ -43,6 +46,7 @@ public class UserController {
 
     @GetMapping("/auth/success")
     public void authSuccess(@AuthenticationPrincipal OidcUser oidcUser, HttpServletResponse response) throws IOException {
+        System.out.println("Auth success endpoint called");
         String email = oidcUser.getEmail();
         String username = oidcUser.getPreferredUsername();
         String role = "ROLE_USER";
