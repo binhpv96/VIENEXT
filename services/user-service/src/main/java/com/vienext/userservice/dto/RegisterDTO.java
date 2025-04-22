@@ -6,13 +6,11 @@ import lombok.Data;
 
 @Data
 public class RegisterDTO {
-    @NotBlank(message = "Username is required")
-    private String username;
+    private String phoneNumber;
 
     @NotBlank(message = "Password is required")
     private String password;
 
     @Email(message = "Invalid email format")
-    @NotBlank(message = "Email is required")
     private String email;
 }

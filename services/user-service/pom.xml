@@ -120,6 +120,12 @@
 		<version>2.2.0</version>
 	</dependency>
 
+<!--		Local date time-->
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+
 <!--		Github-->
 		<dependency>
 			<groupId>io.github.cdimascio</groupId>

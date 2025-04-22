@@ -1,11 +1,11 @@
 package com.vienext.userservice.config;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -15,19 +15,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         System.out.println("Configuring SecurityFilterChain");
         System.out.println("Client ID: " + System.getenv("GOOGLE_CLIENT_ID"));
         System.out.println("Client Secret: " + System.getenv("GOOGLE_CLIENT_SECRET"));
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/register", "/api/users/login", "/api/users/auth/google", "/api/users/auth/success", "/login/oauth2/**", "/error", "/favicon.ico").permitAll()
-                        .requestMatchers("/api/users/**").hasAnyRole("USER", "VIP")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -59,9 +55,24 @@ public class SecurityConfig {
                                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "OAuth2 login failed: " + exception.getMessage());
                             });
                 })
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(); // Spring sẽ tự động inject JwtUtil và CustomUserDetailsService
+    }
+
+    @Bean
+    public JwtUtil jwtUtil() {
+        return new JwtUtil();
+    }
+
+    @Bean
+    public CustomUserDetailsService customUserDetailsService() {
+        return new CustomUserDetailsService();
     }
 
     @Bean

@@ -1,19 +1,13 @@
-package com.vienext.userservice.model;
+package com.vienext.userservice.dto;
 
-import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Document(collection = "users")
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class User {
-    @Id
+public class UserDTO {
+
     private String id;
 
     private String username;
@@ -21,8 +15,6 @@ public class User {
     private String email;
 
     private String phoneNumber;
-
-    private String password;
 
     private String role;
 
@@ -32,7 +24,7 @@ public class User {
 
     private LocalDate dateOfBirth;
 
-    private String gender; // MALE, FEMALE, OTHER
+    private String gender;
 
     private String address;
 
@@ -46,5 +38,5 @@ public class User {
 
     private String status;
 
-    private String subscriptionPlan; // FREE, PREMIUM, ENTERPRISE
+    private String subscriptionPlan;
 }

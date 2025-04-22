@@ -3,17 +3,17 @@ package com.vienext.userservice.controller;
 import com.vienext.userservice.config.JwtUtil;
 import com.vienext.userservice.dto.LoginDTO;
 import com.vienext.userservice.dto.RegisterDTO;
+import com.vienext.userservice.dto.UpgradePlanDTO;
+import com.vienext.userservice.dto.UserDTO;
 import com.vienext.userservice.model.User;
 import com.vienext.userservice.repository.UserRepository;
 import com.vienext.userservice.service.UserService;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/users")
@@ -30,41 +30,85 @@ public class UserController {
 
     @PostMapping("/register")
     public User register(@Valid @RequestBody RegisterDTO registerDTO) {
-        return userService.registerUser(registerDTO);
+        return userService.register(registerDTO);
     }
 
     @PostMapping("/login")
     public String login(@Valid @RequestBody LoginDTO loginDTO) {
-        return userService.loginUser(loginDTO);
+        return userService.login(loginDTO);
     }
 
-    @GetMapping("/auth/google")
-    public void googleLogin(HttpServletResponse response) throws IOException {
-        System.out.println("Google login endpoint called");
-        // Spring Security sẽ tự động xử lý redirect đến Google login
+//    @GetMapping("/auth/google")
+//    public void googleLogin(HttpServletResponse response) throws IOException {
+//        System.out.println("Google login endpoint called");
+//        // Spring Security sẽ tự động xử lý redirect đến Google login
+//    }
+
+//    @GetMapping("/auth/success")
+//    public void authSuccess(@AuthenticationPrincipal OidcUser oidcUser, HttpServletResponse response) throws IOException {
+//        System.out.println("Auth success endpoint called");
+//        String email = oidcUser.getEmail();
+//        String username = oidcUser.getPreferredUsername();
+//        String role = "ROLE_USER";
+//
+//        User user = userRepository.findByEmail(email)
+//                .orElseGet(() -> {
+//                    User newUser = User.builder()
+//                            .username(username)
+//                            .email(email)
+//                            .role(role)
+//                            .isVip(false)
+//                            .build();
+//                    return userRepository.save(newUser);
+//                });
+//
+//        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
+//        userService.storeTokenInRedis(user.getUsername(), token);
+//
+//        response.sendRedirect("http://localhost:3000/callback?token=" + token);
+//    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable String userId) {
+        // lấy thông tin user từ token JWT
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserDTO userDTO = userService.getUserById(userId);
+
+        if (!authenticatedEmail.equals(userDTO.getEmail())) {
+            throw new RuntimeException("You are not authorized to access this user's information");
+        }
+
+        return ResponseEntity.ok(userDTO);
     }
 
-    @GetMapping("/auth/success")
-    public void authSuccess(@AuthenticationPrincipal OidcUser oidcUser, HttpServletResponse response) throws IOException {
-        System.out.println("Auth success endpoint called");
-        String email = oidcUser.getEmail();
-        String username = oidcUser.getPreferredUsername();
-        String role = "ROLE_USER";
+    @PutMapping("/{userId}")
+    public ResponseEntity<UserDTO> updateUser(@PathVariable String userId, @Valid @RequestBody UserDTO updateUserDTO) {
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserDTO userDTO = userService.getUserById(userId);
 
-        User user = userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    User newUser = User.builder()
-                            .username(username)
-                            .email(email)
-                            .role(role)
-                            .isVip(false)
-                            .build();
-                    return userRepository.save(newUser);
-                });
+        if (!authenticatedEmail.equals(userDTO.getEmail())) {
+            throw new RuntimeException("You are not authorized to update this user's information");
+        }
+        UserDTO updatedUserDTO = userService.updateUser(userId, updateUserDTO);
+        return ResponseEntity.ok(updatedUserDTO);
+    }
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
-        userService.storeTokenInRedis(user.getUsername(), token);
+    @PutMapping("/{userId}/subscription")
+    public ResponseEntity<UserDTO> upgradeUserPlan(@PathVariable String userId, @RequestBody UpgradePlanDTO upgradePlanDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedEmail = authentication.getName();
+        UserDTO userDTO = userService.getUserById(userId);
 
-        response.sendRedirect("http://localhost:3000/callback?token=" + token);
+        // Kiểm tra quyền truy cập
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        boolean isSelf = userDTO.getEmail().equals(authenticatedEmail);
+
+        if (!isSelf && !isAdmin) {
+            throw new RuntimeException("You are not authorized to upgrade this user's subscription plan");
+        }
+
+        UserDTO updatedUserDTO = userService.upgradeUserPlan(userId, upgradePlanDTO);
+        return ResponseEntity.ok(updatedUserDTO);
     }
 }
