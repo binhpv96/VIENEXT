@@ -1,13 +1,11 @@
 package com.vienext.userservice.controller;
 
 import com.vienext.userservice.config.JwtUtil;
-import com.vienext.userservice.dto.UserDTO;
 import com.vienext.userservice.model.User;
 import com.vienext.userservice.repository.UserRepository;
 import com.vienext.userservice.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
@@ -22,25 +20,24 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody UserDTO userDTO) {
-        User user = userService.register(userDTO);
-        return ResponseEntity.ok(user);
+    public User register(@RequestParam String username, @RequestParam String email, @RequestParam String password) {
+        return userService.registerUser(username, email, password);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserDTO userDTO) {
-        String token = userService.login(userDTO.getUsername(), userDTO.getPassword());
-        return ResponseEntity.ok(token);
+    public String login(@RequestParam String username, @RequestParam String password) {
+        return userService.loginUser(username, password);
     }
 
     @GetMapping("/auth/google")
-    public void googleLogin() {
+    public void googleLogin(HttpServletResponse response) throws IOException {
+        System.out.println("Google login endpoint called");
         // Spring Security sẽ tự động xử lý redirect đến Google login
     }
 
@@ -64,7 +61,6 @@ public class UserController {
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
         userService.storeTokenInRedis(user.getUsername(), token);
 
-        // Redirect về frontend với token trong query parameter
         response.sendRedirect("http://localhost:3000/callback?token=" + token);
     }
 }
