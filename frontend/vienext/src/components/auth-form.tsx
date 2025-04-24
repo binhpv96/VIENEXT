@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation" // Sửa import từ "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,43 +25,39 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
     "idle" | "typing-username" | "typing-password" | "password-visible" | "password-hidden"
   >("idle")
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
+  const router = useRouter() // Sử dụng useRouter từ "next/navigation"
   const usernameInputRef = useRef<HTMLInputElement>(null)
 
   const t = translations[language]
 
-  // Update cursor position based on caret position in the username input
   const updateCursorPosition = () => {
     if (!usernameInputRef.current || !isTypingUsername) return
 
     const input = usernameInputRef.current
     const caretPosition = input.selectionStart || 0
 
-    // Calculate normalized position based on input width and caret position
     const inputWidth = input.offsetWidth
-    const charWidth = inputWidth / 30 // Approximate width of a character
+    const charWidth = inputWidth / 30
 
-    // Calculate x position (-1 to 1 range)
     const x = ((caretPosition * charWidth) / inputWidth) * 2 - 1
-
     setCursorPosition({ x, y: 0 })
   }
 
-  // Handle username typing
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value)
     setIsTypingUsername(true)
     updateCursorPosition()
   }
 
-  // Handle username input focus
   const handleUsernameFocus = () => {
     setIsTypingUsername(true)
     setBotState("typing-username")
     updateCursorPosition()
   }
 
-  // Handle username input blur
   const handleUsernameBlur = () => {
     setIsTypingUsername(false)
     if (isTypingPassword) {
@@ -71,20 +67,17 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
     }
   }
 
-  // Handle password typing
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value)
     setIsTypingPassword(true)
     setBotState(showPassword ? "password-visible" : "password-hidden")
   }
 
-  // Handle password input focus
   const handlePasswordFocus = () => {
     setIsTypingPassword(true)
     setBotState(showPassword ? "password-visible" : "password-hidden")
   }
 
-  // Handle password input blur
   const handlePasswordBlur = () => {
     setIsTypingPassword(false)
     if (isTypingUsername) {
@@ -94,29 +87,23 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
     }
   }
 
-  // Handle password visibility toggle
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword)
     setBotState(!showPassword ? "password-visible" : "password-hidden")
   }
 
-  // Update cursor position on key press
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    console.log(e.key);
-    
     if (isTypingUsername) {
       updateCursorPosition()
     }
   }
 
-  // Update cursor position on click
   const handleClick = () => {
     if (isTypingUsername) {
       updateCursorPosition()
     }
   }
 
-  // Set up event listeners for cursor movement
   useEffect(() => {
     const usernameInput = usernameInputRef.current
     if (usernameInput) {
@@ -130,26 +117,75 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
     }
   }, [isTypingUsername])
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    if (!username.trim()) {
+      setError(t.usernameRequired)
+      setIsLoading(false)
+      return
+    }
+
+    if (!password.trim()) {
+      setError(t.passwordRequired)
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch("http://localhost:8081/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          identifier: username,
+          password: password,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText || t.loginFailed)
+      }
+
+      const token = await response.text()
+      localStorage.setItem("authToken", token)
+      router.push("/dashboard") 
+    } catch (err: any) {
+      setError(err.message || t.loginFailed)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      {/* Animated AI Bot */}
       <div className="flex justify-center mb-6">
         <AnimatedAiBot state={botState} cursorPosition={cursorPosition} />
       </div>
 
-      <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="text-red-500 text-sm text-center">
+            {error}
+          </div>
+        )}
+
         {!isLogin && (
           <div className="space-y-2">
-            <Label htmlFor="name">{t.fullName}</Label>
+            <Label htmlFor="name">{t.usernameOrFullName}</Label>
             <div className="relative">
               <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <Input id="name" placeholder={t.fullNamePlaceholder} className="pl-10" />
+              <Input id="name" placeholder={t.usernameOrFullNamePlaceholder} className="pl-10" />
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="username">{t.username}</Label>
+          <Label htmlFor="username">{t.emailOrPhoneNumber}</Label>
           <div className="relative">
             <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
             <Input
@@ -201,11 +237,17 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
           </div>
         </div>
 
-        <Button className="group relative w-full overflow-hidden bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400">
-          <span className="relative z-10">{isLogin ? t.login : t.register}</span>
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="group relative w-full overflow-hidden bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400"
+        >
+          <span className="relative z-10">
+            {isLoading ? t.loading : (isLogin ? t.login : t.register)}
+          </span>
           <span className="absolute inset-0 z-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 transition-opacity group-hover:opacity-100"></span>
         </Button>
-      </div>
+      </form>
     </div>
   )
 }

@@ -11,8 +11,7 @@ export default function CallbackPage() {
     const token = searchParams.get("token")
     if (token) {
       localStorage.setItem("authToken", token)
-    //   // Chuyển hướng đến trang dashboard
-    //   router.push("/dashboard")
+      router.push("/dashboard")
     } else {
       // Nếu không có token, chuyển hướng về trang đăng nhập
       router.push("/auth")
