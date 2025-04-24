@@ -204,7 +204,7 @@ public class UserService {
         return userDTO;
     }
 
-    public void storeTokenInRedis(String username, String token) {
-        System.out.println("Storing token for user: " + username + ", token: " + token);
+    public void storeTokenInRedis(String email, String token) {
+        System.out.println("Storing token for user: " + email + ", token: " + token);
     }
 }

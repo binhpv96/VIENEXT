@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { translations } from "@/lib/translations"
 import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
 
 interface SocialLoginProps {
   isLogin: boolean
@@ -12,10 +11,9 @@ interface SocialLoginProps {
 
 export function SocialLogin({ isLogin, language }: SocialLoginProps) {
   const t = translations[language]
-  const router = useRouter()
 
   const loginWithGoogle = () => {
-    router.push("http://localhost:8081/api/users/auth/google") // Chuyển hướng bằng router.push
+    window.location.href = "http://localhost:8081/oauth2/authorization/google"
   }
 
   return (

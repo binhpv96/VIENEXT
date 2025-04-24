@@ -106,7 +106,7 @@ export function AuthPage() {
 
       {/* Footer */}
       <footer className="relative z-10 p-6 text-center text-sm text-slate-600 dark:text-slate-400">
-        © 2025 NexusAuth. {t.allRightsReserved}
+        © 2025 Vienext. {t.allRightsReserved}
       </footer>
     </div>
   )

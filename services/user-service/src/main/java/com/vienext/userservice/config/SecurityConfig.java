@@ -1,33 +1,39 @@
 package com.vienext.userservice.config;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("Configuring SecurityFilterChain");
-        System.out.println("Client ID: " + System.getenv("GOOGLE_CLIENT_ID"));
-        System.out.println("Client Secret: " + System.getenv("GOOGLE_CLIENT_SECRET"));
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register", "/api/users/login", "/api/users/auth/google", "/api/users/auth/success", "/login/oauth2/**", "/error", "/favicon.ico").permitAll()
+                        .requestMatchers("/api/users/register", "/api/users/login", "/oauth2/authorization/google", "/login/oauth2/code/google", "/error", "/favicon.ico").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -35,26 +41,9 @@ public class SecurityConfig {
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + authException.getMessage());
                         })
                 )
-                .oauth2Login(oauth2 -> {
-                    System.out.println("Configuring OAuth2 login");
-                    oauth2
-                            .authorizationEndpoint(auth -> {
-                                System.out.println("Starting OAuth2 authorization at /api/users/auth/google");
-                                auth.baseUri("/api/users/auth"); // Chỉ định base URI cho OAuth 2.0
-                            })
-                            .redirectionEndpoint(redir -> {
-                                System.out.println("Configuring redirection endpoint for OAuth2");
-                                redir.baseUri("/login/oauth2/code/*");
-                            })
-                            .successHandler((request, response, authentication) -> {
-                                System.out.println("OAuth2 login successful, redirecting to /api/users/auth/success");
-                                response.sendRedirect("/api/users/auth/success");
-                            })
-                            .failureHandler((request, response, exception) -> {
-                                System.out.println("OAuth2 login failed: " + exception.getMessage());
-                                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "OAuth2 login failed: " + exception.getMessage());
-                            });
-                })
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oauth2LoginSuccessHandler)
+                )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -62,12 +51,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(); // Spring sẽ tự động inject JwtUtil và CustomUserDetailsService
-    }
-
-    @Bean
-    public JwtUtil jwtUtil() {
-        return new JwtUtil();
+        return new JwtAuthenticationFilter();
     }
 
     @Bean
@@ -76,7 +60,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
