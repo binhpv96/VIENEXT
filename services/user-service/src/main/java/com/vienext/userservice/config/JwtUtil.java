@@ -1,6 +1,7 @@
 package com.vienext.userservice.config;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,8 +19,15 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
+    @Value("${jwt.expiration:36000}") // Mặc định 10 giờ (36,000 giây)
+    private long expirationTime; // Thời gian hết hạn (tính bằng giây)
+
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> (String) claims.get("role"));
     }
 
     public Date extractExpiration(String token) {
@@ -32,11 +40,15 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8)))
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser()
+                    .verifyWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8)))
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (JwtException e) {
+            throw new IllegalArgumentException("Invalid JWT token: " + e.getMessage());
+        }
     }
 
     private Boolean isTokenExpired(String token) {
@@ -54,13 +66,27 @@ public class JwtUtil {
                 .claims(claims)
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 giờ
+                .expiration(new Date(System.currentTimeMillis() + expirationTime * 1000)) // Chuyển từ giây sang mili giây
                 .signWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8)))
                 .compact();
     }
 
     public Boolean validateToken(String token, String email) {
-        final String extractedEmail = extractEmail(token);
-        return (extractedEmail.equals(email) && !isTokenExpired(token));
+        try {
+            final String extractedEmail = extractEmail(token);
+            return (extractedEmail.equals(email) && !isTokenExpired(token));
+        } catch (IllegalArgumentException e) {
+            return false; // Token không hợp lệ
+        }
+    }
+
+    public Boolean validateTokenWithRole(String token, String email, String expectedRole) {
+        try {
+            final String extractedEmail = extractEmail(token);
+            final String extractedRole = extractRole(token);
+            return (extractedEmail.equals(email) && expectedRole.equals(extractedRole) && !isTokenExpired(token));
+        } catch (IllegalArgumentException e) {
+            return false; // Token không hợp lệ
+        }
     }
 }

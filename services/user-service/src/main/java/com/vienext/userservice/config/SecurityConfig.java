@@ -34,6 +34,8 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/oauth2/authorization/google",
                                 "/login/oauth2/code/google",
+                                "/oauth2/authorization/github",
+                                "/login/oauth2/code/github",
                                 "/error",
                                 "/favicon.ico",
                                 "/swagger-ui/**",      // Thêm Swagger UI
