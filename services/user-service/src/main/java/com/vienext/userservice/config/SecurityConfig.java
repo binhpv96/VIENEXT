@@ -29,7 +29,17 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register", "/api/users/login", "/oauth2/authorization/google", "/login/oauth2/code/google", "/error", "/favicon.ico").permitAll()
+                        .requestMatchers(
+                                "/api/users/register",
+                                "/api/users/login",
+                                "/oauth2/authorization/google",
+                                "/login/oauth2/code/google",
+                                "/error",
+                                "/favicon.ico",
+                                "/swagger-ui/**",      // Thêm Swagger UI
+                                "/api-docs/**",        // Thêm API docs
+                                "/swagger-ui.html"     // Thêm Swagger UI HTML
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
