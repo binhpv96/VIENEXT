@@ -67,7 +67,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getId());
         userService.storeTokenInRedis(user.getUsername(), token);
 
         response.sendRedirect("http://localhost:3000/callback?token=" + token);

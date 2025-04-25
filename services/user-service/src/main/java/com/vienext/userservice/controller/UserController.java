@@ -31,9 +31,9 @@ public class UserController {
         boolean isValid = userService.verifyOtp(request.getEmail(), request.getOtp());
         if (isValid) {
             userService.activateUser(request.getEmail());
-            return ResponseEntity.ok("User has been activated successfully");
+            return ResponseEntity.ok("OTP verified successfully. Account activated!");
         }
-        return ResponseEntity.badRequest().body("Invalid OTP");
+        return ResponseEntity.ok("Invalid OTP");
     }
 
     @PostMapping("/login")
@@ -41,25 +41,26 @@ public class UserController {
         return userService.login(loginDTO);
     }
 
-    @PostMapping("/request-status-update")
-    public ResponseEntity<String> requestStatusUpdate(@RequestParam String status) {
-        try {
-            userService.requestStatusUpdate(status);
-            return ResponseEntity.ok("OTP sent to your email for status update.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    @PostMapping("/update-status")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<UserDTO> updateUserStatus(
+            @RequestParam String userId,
+            @RequestParam String status) {
+        UserDTO updatedUser = userService.updateUserStatus(userId, status);
+        return ResponseEntity.ok(updatedUser);
     }
 
-//    @PostMapping("/verify-status-update")
-//    public ResponseEntity<UserDTO> verifyStatusUpdate(@RequestParam String otp) {
-//        try {
-//            UserDTO updatedUser = userService.verifyStatusUpdate(otp);
-//            return ResponseEntity.ok(updatedUser);
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new UserDTO(e.getMessage()));
-//        }
-//    }
+    @PostMapping("/request-status-update")
+    public ResponseEntity<String> requestStatusUpdate(@RequestParam String status) {
+        userService.requestStatusUpdate(status);
+        return ResponseEntity.ok("OTP sent to your email for status update.");
+    }
+
+    @PostMapping("/verify-status-update")
+    public ResponseEntity<UserDTO> verifyStatusUpdate(@RequestParam String otp) {
+        UserDTO updatedUser = userService.verifyStatusUpdate(otp);
+        return ResponseEntity.ok(updatedUser);
+    }
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable String userId) {

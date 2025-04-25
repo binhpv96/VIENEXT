@@ -3,6 +3,7 @@ package com.vienext.userservice.config;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -17,21 +18,38 @@ import java.util.function.Function;
 public class JwtUtil {
 
     @Value("${jwt.secret}")
-    private String SECRET_KEY;
+    private String secret;
 
-    @Value("${jwt.expiration:36000}") // Mặc định 10 giờ (36,000 giây)
-    private long expirationTime; // Thời gian hết hạn (tính bằng giây)
+    @Value("${jwt.expiration:36000}")
+    private long expiration;
 
-    public String extractEmail(String token) {
-        return extractClaim(token, Claims::getSubject);
+    public String generateToken(String identifier, String role, String userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        claims.put("userId", userId); // Thêm userId vào claims
+        return createToken(claims, identifier);
+    }
+
+    private String createToken(Map<String, Object> claims, String subject) {
+        return Jwts.builder()
+                .claims(claims)
+                .subject(subject)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expiration * 1000))
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                .compact();
+    }
+
+    public String extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", String.class));
     }
 
     public String extractRole(String token) {
-        return extractClaim(token, claims -> (String) claims.get("role"));
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -42,7 +60,7 @@ public class JwtUtil {
     private Claims extractAllClaims(String token) {
         try {
             return Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8)))
+                    .verifyWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
@@ -51,42 +69,16 @@ public class JwtUtil {
         }
     }
 
+    public Boolean validateToken(String token, String username) {
+        final String extractedUsername = extractUsername(token);
+        return (extractedUsername.equals(username) && !isTokenExpired(token));
+    }
+
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(String email, String role) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
-        return createToken(claims, email);
-    }
-
-    private String createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder()
-                .claims(claims)
-                .subject(subject)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expirationTime * 1000)) // Chuyển từ giây sang mili giây
-                .signWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8)))
-                .compact();
-    }
-
-    public Boolean validateToken(String token, String email) {
-        try {
-            final String extractedEmail = extractEmail(token);
-            return (extractedEmail.equals(email) && !isTokenExpired(token));
-        } catch (IllegalArgumentException e) {
-            return false; // Token không hợp lệ
-        }
-    }
-
-    public Boolean validateTokenWithRole(String token, String email, String expectedRole) {
-        try {
-            final String extractedEmail = extractEmail(token);
-            final String extractedRole = extractRole(token);
-            return (extractedEmail.equals(email) && expectedRole.equals(extractedRole) && !isTokenExpired(token));
-        } catch (IllegalArgumentException e) {
-            return false; // Token không hợp lệ
-        }
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 }

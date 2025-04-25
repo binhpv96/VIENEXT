@@ -5,6 +5,10 @@ import com.vienext.userservice.dto.LoginDTO;
 import com.vienext.userservice.dto.RegisterDTO;
 import com.vienext.userservice.dto.UpgradePlanDTO;
 import com.vienext.userservice.dto.UserDTO;
+import com.vienext.userservice.exception.BadRequestException;
+import com.vienext.userservice.exception.ForbiddenException;
+import com.vienext.userservice.exception.NotFoundException;
+import com.vienext.userservice.exception.UnauthorizedException;
 import com.vienext.userservice.model.SubscriptionPlan;
 import com.vienext.userservice.model.User;
 import com.vienext.userservice.repository.UserRepository;
@@ -76,8 +80,7 @@ public class UserService {
         return true;
     }
 
-    public String generateRandoomUsername() {
-
+    public String generateRandomUsername() {
         String characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         Random random = new Random();
         StringBuilder username = new StringBuilder("@");
@@ -145,7 +148,7 @@ public class UserService {
 
         // Tạo username randoom nếu lúc đăng kí không điền
         if (!isUsername(registerDTO.getUsername())) {
-            registerDTO.setUsername(generateRandoomUsername());
+            registerDTO.setUsername(generateRandomUsername());
         }
 
         User user = User.builder()
@@ -175,64 +178,71 @@ public class UserService {
         String password = loginDTO.getPassword();
         User user = userRepository.findByEmail(identifier)
                 .orElseGet(() -> userRepository.findByPhoneNumber(identifier)
-                .orElseThrow(() -> new RuntimeException("User not found")));
+                .orElseThrow(() -> new NotFoundException("User not found")));
 
         if ("PENDING".equals(user.getStatus())) {
-            throw new RuntimeException("Account is not activated.");
+            throw new ForbiddenException("Account is not activated.");
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new UnauthorizedException("Invalid password");
         }
 
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+        String token = jwtUtil.generateToken(
+                user.getEmail() != null ? user.getEmail() : user.getPhoneNumber(),
+                user.getRole(),
+                user.getId()
+        );
         storeTokenInRedis(user.getEmail(), token);
         return token;
     }
 
+    // admin update status of user
     public UserDTO updateUserStatus(String userId, String newStatus) {
-        // Kiểm tra trạng thái hợp lệ
         if (!"PENDING".equals(newStatus) && !"ACTIVE".equals(newStatus)) {
             throw new RuntimeException("Invalid status. Status must be either PENDING or ACTIVE.");
         }
 
-        // Tìm user theo ID
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Cập nhật trạng thái
         user.setStatus(newStatus);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        // Trả về DTO
         return mapToUserDTO(user);
     }
 
-    // Hàm gửi OTP cho thay đổi trạng thái
     public void requestStatusUpdate(String newStatus) {
         if (!"PENDING".equals(newStatus) && !"ACTIVE".equals(newStatus)) {
-            throw new RuntimeException("Invalid status. Status must be either PENDING or ACTIVE.");
+            throw new BadRequestException("Invalid status. Status must be either PENDING or ACTIVE");
         }
 
-        // Lấy thông tin người dùng từ token (người dùng đã đăng nhập)
+        // Lấy thông tin người dùng từ token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName(); // Email từ token
+        String identifier = authentication.getName();
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(identifier)
+                .orElseGet(() -> userRepository.findByPhoneNumber(identifier)
+                .orElseThrow(() -> new NotFoundException("User not found")));
+
+        // Kiểm tra user có email để gửi OTP không
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
+            throw new BadRequestException("User does not have an email address. Please provide an email address for your account..");
+        }
 
         // Tạo OTP và lưu vào storage
+        String userId = user.getId();
         String otp = String.format("%06d", new Random().nextInt(999999));
-        statusUpdateOtpStorage.put("STATUS_OTP:" + email, otp);
-        pendingStatusChanges.put(email, newStatus);
+        statusUpdateOtpStorage.put("STATUS_OTP:" + userId, otp);
+        pendingStatusChanges.put(userId, newStatus);
 
         // Gửi OTP qua email
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
+        message.setTo(user.getEmail());
         message.setSubject("Your OTP for Status Update");
         message.setText("Your OTP to update your account status is: " + otp + "\nThis OTP is valid for 5 minutes.");
         mailSender.send(message);
@@ -241,33 +251,38 @@ public class UserService {
     public UserDTO verifyStatusUpdate(String otp) {
         // Lấy thông tin người dùng từ token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String identifier = authentication.getName();
+
+        // Tìm user bằng email hoặc phoneNumber
+        User user = userRepository.findByEmail(identifier)
+                .orElseGet(() -> userRepository.findByPhoneNumber(identifier)
+                        .orElseThrow(() -> new NotFoundException("User not found")));
+
+        String userId = user.getId();
 
         // Kiểm tra OTP
-        String storedOtp = statusUpdateOtpStorage.get("STATUS_OTP:" + email);
+        String storedOtp = statusUpdateOtpStorage.get("STATUS_OTP:" + userId);
         if (storedOtp == null) {
-            throw new RuntimeException("OTP has expired or does not exist");
+            throw new BadRequestException("OTP has expired or does not exist");
         }
         if (!storedOtp.equals(otp)) {
-            throw new RuntimeException("Invalid OTP");
+            throw new BadRequestException("Invalid OTP");
         }
 
         // Lấy trạng thái dự kiến
-        String newStatus = pendingStatusChanges.get(email);
+        String newStatus = pendingStatusChanges.get(userId);
         if (newStatus == null) {
-            throw new RuntimeException("No status update request found");
+            throw new BadRequestException("No status update request found");
         }
 
         // Cập nhật trạng thái
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
         user.setStatus(newStatus);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
         // Xóa OTP và trạng thái tạm
-        statusUpdateOtpStorage.remove("STATUS_OTP:" + email);
-        pendingStatusChanges.remove(email);
+        statusUpdateOtpStorage.remove("STATUS_OTP:" + userId);
+        pendingStatusChanges.remove(userId);
 
         return mapToUserDTO(user);
     }
