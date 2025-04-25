@@ -1,14 +1,13 @@
 package com.vienext.userservice.controller;
 
-import com.vienext.userservice.dto.LoginDTO;
-import com.vienext.userservice.dto.RegisterDTO;
-import com.vienext.userservice.dto.UpgradePlanDTO;
-import com.vienext.userservice.dto.UserDTO;
+import com.vienext.userservice.dto.*;
 import com.vienext.userservice.model.User;
 import com.vienext.userservice.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -21,14 +20,46 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public User register(@Valid @RequestBody RegisterDTO registerDTO) {
-        return userService.register(registerDTO);
+    public ResponseEntity<User> register(@Valid @RequestBody RegisterDTO registerDTO) {
+        User user = userService.register(registerDTO);
+        userService.generateAndSendOtp(user.getEmail());
+        return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<String> verifyOtp(@RequestBody OtpVerificationRequest request) {
+        boolean isValid = userService.verifyOtp(request.getEmail(), request.getOtp());
+        if (isValid) {
+            userService.activateUser(request.getEmail());
+            return ResponseEntity.ok("User has been activated successfully");
+        }
+        return ResponseEntity.badRequest().body("Invalid OTP");
     }
 
     @PostMapping("/login")
     public String login(@Valid @RequestBody LoginDTO loginDTO) {
         return userService.login(loginDTO);
     }
+
+    @PostMapping("/request-status-update")
+    public ResponseEntity<String> requestStatusUpdate(@RequestParam String status) {
+        try {
+            userService.requestStatusUpdate(status);
+            return ResponseEntity.ok("OTP sent to your email for status update.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+//    @PostMapping("/verify-status-update")
+//    public ResponseEntity<UserDTO> verifyStatusUpdate(@RequestParam String otp) {
+//        try {
+//            UserDTO updatedUser = userService.verifyStatusUpdate(otp);
+//            return ResponseEntity.ok(updatedUser);
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new UserDTO(e.getMessage()));
+//        }
+//    }
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable String userId) {

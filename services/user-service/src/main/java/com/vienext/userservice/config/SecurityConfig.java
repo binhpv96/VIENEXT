@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/users/register",
+                                "/api/users/verify-otp",
                                 "/api/users/login",
                                 "/oauth2/authorization/google",
                                 "/login/oauth2/code/google",
@@ -42,6 +43,9 @@ public class SecurityConfig {
                                 "/api-docs/**",        // Thêm API docs
                                 "/swagger-ui.html"     // Thêm Swagger UI HTML
                         ).permitAll()
+                        .requestMatchers("/api/users/update-status").hasRole("ADMIN")
+                        .requestMatchers("/api/users/request-status-update").authenticated() // Yêu cầu đăng nhập
+                        .requestMatchers("/api/users/verify-status-update").authenticated() // Yêu cầu đăng nhập
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

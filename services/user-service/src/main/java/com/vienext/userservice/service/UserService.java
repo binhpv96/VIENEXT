@@ -10,12 +10,18 @@ import com.vienext.userservice.model.User;
 import com.vienext.userservice.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 @Service
 public class UserService {
@@ -29,28 +35,139 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    public User register(RegisterDTO registerDTO) {
-        String phoneNumber = registerDTO.getPhoneNumber();
-        String password = registerDTO.getPassword();
-        String email = registerDTO.getEmail();
+    @Autowired
+    private JavaMailSender mailSender;
 
-        if (userRepository.findByPhoneNumber(phoneNumber).isPresent()) {
-            throw new RuntimeException("Phone number already exists");
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+    private static final long OTP_EXPIRY_MINUTES = 5;
+
+    private Map<String, String> otpStorage = new HashMap<>();
+    private Map<String, String> statusUpdateOtpStorage = new HashMap<>(); // Lưu OTP cho thay đổi trạng thái
+    private Map<String, String> pendingStatusChanges = new HashMap<>(); // Lưu trạng thái dự kiến
+
+    public String generateAndSendOtp(String email) {
+        String otp = String.format("%06d", new Random().nextInt(999999));
+
+//        Lưu OTP vào Redis với key là email, hết hạn sau 5p
+        redisTemplate.opsForValue().set("OTP:" + email, otp, OTP_EXPIRY_MINUTES, TimeUnit.MINUTES);
+
+//        Gửi email
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Your OTP for Registration");
+        message.setText("Your OTP for registration is: " + otp + "\nThis OTP is valid for 5 minutes.");
+        mailSender.send(message);
+
+        return otp;  // return để debug nếu cần
+    }
+
+    public boolean verifyOtp(String email, String otp) {
+        String storedOtp = redisTemplate.opsForValue().get("OTP:" + email);
+        if (storedOtp == null) {
+            throw new RuntimeException("OTP has expired or not exist");
         }
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("Email already exists");
+        if (!storedOtp.equals(otp)) {
+            throw new RuntimeException("Invalid OTP");
         }
+        // Xóa sau khi xác thực thành công
+        redisTemplate.delete("OTP:" + email);
+        return true;
+    }
+
+    public String generateRandoomUsername() {
+
+        String characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random random = new Random();
+        StringBuilder username = new StringBuilder("@");
+
+        // 8 kí tự (không tính @)
+        for (int i = 0; i < 8; i++) {
+            username.append(characters.charAt(random.nextInt(characters.length())));
+        }
+
+        String generatedUsername = username.toString();
+        while (userRepository.findByUsername(generatedUsername).isPresent()) {
+            username = new StringBuilder("@");
+            for (int i = 0; i < 8; i++) {
+                username.append(characters.charAt(random.nextInt(characters.length())));
+            }
+            generatedUsername = username.toString();
+        }
+        return generatedUsername;
+    }
+
+    public boolean isUsername(String input) {
+        if (input == null || input.isEmpty()) return false;
+
+        String usernamePattern = "^@[a-zA-Z0-9]$";
+        Pattern pattern = Pattern.compile(usernamePattern);
+
+        return pattern.matcher(input).matches();
+    }
+
+    public User register(RegisterDTO registerDTO) {
+
+        // Kiểm tra ít nhất một trong hai (email hoặc phoneNumber) được cung cấp
+        if ((registerDTO.getEmail() == null || registerDTO.getEmail().trim().isEmpty()) &&
+                (registerDTO.getPhoneNumber() == null || registerDTO.getPhoneNumber().trim().isEmpty())) {
+            throw new RuntimeException("Either email or phone number must be provided");
+        }
+
+        // Kiểm tra email nếu được cung cấp
+        if (registerDTO.getEmail() != null && !registerDTO.getEmail().trim().isEmpty()) {
+            var existingUser = userRepository.findByEmail(registerDTO.getEmail());
+            if (existingUser.isPresent()) {
+                User user = existingUser.get();
+                if ("PENDING".equals(user.getStatus())) {
+                    userRepository.delete(user);
+                } else {
+                    throw new RuntimeException("Email already exists. Please log in or reset your password.");
+                }
+            }
+        }
+
+        // Kiểm tra phoneNumber nếu được cung cấp
+        if (registerDTO.getPhoneNumber() != null && !registerDTO.getPhoneNumber().trim().isEmpty()) {
+            var existingUser = userRepository.findByPhoneNumber(registerDTO.getPhoneNumber());
+            if (existingUser.isPresent()) {
+                User user = existingUser.get();
+                if ("PENDING".equals(user.getStatus())) {
+                    // Nếu tài khoản ở trạng thái PENDING, xóa tài khoản cũ và tạo mới
+                    userRepository.delete(user);
+                } else {
+                    // Nếu tài khoản đã ACTIVE, báo lỗi
+                    throw new RuntimeException("Phone number already exists. Please log in or reset your password.");
+                }
+            }
+        }
+
+        // Tạo username randoom nếu lúc đăng kí không điền
+        if (!isUsername(registerDTO.getUsername())) {
+            registerDTO.setUsername(generateRandoomUsername());
+        }
+
         User user = User.builder()
-                .phoneNumber(phoneNumber)
-                .email(email)
-                .password(passwordEncoder.encode(password))
+                .username(registerDTO.getUsername())
+                .email(registerDTO.getEmail())
+                .password(passwordEncoder.encode(registerDTO.getPassword()))
                 .role("ROLE_USER")
-                .subscriptionPlan(SubscriptionPlan.FREE.getPlanName())
+                .phoneNumber(registerDTO.getPhoneNumber())
+                .status("PENDING") // Mới tạo là PENDING, chờ xác thực OTP
+                .subscriptionPlan("FREE")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .status("ACTIVE")
                 .build();
         return userRepository.save(user);
+    }
+
+    public void activateUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setStatus("ACTIVE");
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     public String login(LoginDTO loginDTO) {
@@ -60,6 +177,10 @@ public class UserService {
                 .orElseGet(() -> userRepository.findByPhoneNumber(identifier)
                 .orElseThrow(() -> new RuntimeException("User not found")));
 
+        if ("PENDING".equals(user.getStatus())) {
+            throw new RuntimeException("Account is not activated.");
+        }
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
@@ -67,10 +188,88 @@ public class UserService {
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        // Tạo token JWT (dùng email làm subject thay vì username)
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
         storeTokenInRedis(user.getEmail(), token);
         return token;
+    }
+
+    public UserDTO updateUserStatus(String userId, String newStatus) {
+        // Kiểm tra trạng thái hợp lệ
+        if (!"PENDING".equals(newStatus) && !"ACTIVE".equals(newStatus)) {
+            throw new RuntimeException("Invalid status. Status must be either PENDING or ACTIVE.");
+        }
+
+        // Tìm user theo ID
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Cập nhật trạng thái
+        user.setStatus(newStatus);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        // Trả về DTO
+        return mapToUserDTO(user);
+    }
+
+    // Hàm gửi OTP cho thay đổi trạng thái
+    public void requestStatusUpdate(String newStatus) {
+        if (!"PENDING".equals(newStatus) && !"ACTIVE".equals(newStatus)) {
+            throw new RuntimeException("Invalid status. Status must be either PENDING or ACTIVE.");
+        }
+
+        // Lấy thông tin người dùng từ token (người dùng đã đăng nhập)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName(); // Email từ token
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Tạo OTP và lưu vào storage
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        statusUpdateOtpStorage.put("STATUS_OTP:" + email, otp);
+        pendingStatusChanges.put(email, newStatus);
+
+        // Gửi OTP qua email
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Your OTP for Status Update");
+        message.setText("Your OTP to update your account status is: " + otp + "\nThis OTP is valid for 5 minutes.");
+        mailSender.send(message);
+    }
+
+    public UserDTO verifyStatusUpdate(String otp) {
+        // Lấy thông tin người dùng từ token
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        // Kiểm tra OTP
+        String storedOtp = statusUpdateOtpStorage.get("STATUS_OTP:" + email);
+        if (storedOtp == null) {
+            throw new RuntimeException("OTP has expired or does not exist");
+        }
+        if (!storedOtp.equals(otp)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+
+        // Lấy trạng thái dự kiến
+        String newStatus = pendingStatusChanges.get(email);
+        if (newStatus == null) {
+            throw new RuntimeException("No status update request found");
+        }
+
+        // Cập nhật trạng thái
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setStatus(newStatus);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        // Xóa OTP và trạng thái tạm
+        statusUpdateOtpStorage.remove("STATUS_OTP:" + email);
+        pendingStatusChanges.remove(email);
+
+        return mapToUserDTO(user);
     }
 
     public UserDTO getUserById(String userId) {
@@ -155,12 +354,9 @@ public class UserService {
     }
 
     public UserDTO upgradeUserPlan(String userId, UpgradePlanDTO upgradePlanDTO) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
-            throw new RuntimeException("User not found with ID: " + userId);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        User user = userOptional.get();
         String newPlan = upgradePlanDTO.getSubscriptionPlan();
 
         // Kiểm tra gói mới có hợp lệ không
@@ -175,32 +371,30 @@ public class UserService {
             throw new RuntimeException("User is already on the " + newPlan + " plan");
         }
 
-        // Cập nhật gói và thời gian updatedAt
         user.setSubscriptionPlan(newPlan);
         user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        return mapToUserDTO(user);
+    }
 
-        // Lưu user đã cập nhật
-        User updatedUser = userRepository.save(user);
-
-        // Ánh xạ sang UserDTO để trả về
+    private UserDTO mapToUserDTO(User user) {
         UserDTO userDTO = new UserDTO();
-        userDTO.setId(updatedUser.getId());
-        userDTO.setUsername(updatedUser.getUsername());
-        userDTO.setEmail(updatedUser.getEmail());
-        userDTO.setPhoneNumber(updatedUser.getPhoneNumber());
-        userDTO.setRole(updatedUser.getRole());
-        userDTO.setFirstName(updatedUser.getFirstName());
-        userDTO.setLastName(updatedUser.getLastName());
-        userDTO.setDateOfBirth(updatedUser.getDateOfBirth());
-        userDTO.setGender(updatedUser.getGender());
-        userDTO.setAddress(updatedUser.getAddress());
-        userDTO.setProfilePicture(updatedUser.getProfilePicture());
-        userDTO.setCreatedAt(updatedUser.getCreatedAt());
-        userDTO.setUpdatedAt(updatedUser.getUpdatedAt());
-        userDTO.setLastLogin(updatedUser.getLastLogin());
-        userDTO.setStatus(updatedUser.getStatus());
-        userDTO.setSubscriptionPlan(updatedUser.getSubscriptionPlan());
-
+        userDTO.setId(user.getId());
+        userDTO.setUsername(user.getUsername());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setPhoneNumber(user.getPhoneNumber());
+        userDTO.setRole(user.getRole());
+        userDTO.setFirstName(user.getFirstName());
+        userDTO.setLastName(user.getLastName());
+        userDTO.setDateOfBirth(user.getDateOfBirth());
+        userDTO.setGender(user.getGender());
+        userDTO.setAddress(user.getAddress());
+        userDTO.setProfilePicture(user.getProfilePicture());
+        userDTO.setCreatedAt(user.getCreatedAt());
+        userDTO.setUpdatedAt(user.getUpdatedAt());
+        userDTO.setLastLogin(user.getLastLogin());
+        userDTO.setStatus(user.getStatus());
+        userDTO.setSubscriptionPlan(user.getSubscriptionPlan());
         return userDTO;
     }
 

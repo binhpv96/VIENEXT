@@ -2,14 +2,14 @@
 import { motion } from "framer-motion"
 
 interface AnimatedAiBotProps {
-  state: "idle" | "typing-username" | "typing-password" | "password-visible" | "password-hidden"
+  state: "idle" | "typing-identifier" | "typing-password" | "password-visible" | "password-hidden"
   cursorPosition?: { x: number; y: number }
 }
 
 export function AnimatedAiBot({ state, cursorPosition }: AnimatedAiBotProps) {
   // Calculate eye position based on cursor position
   const getEyePosition = () => {
-    if (!cursorPosition || state !== "typing-username") return { x: 0, y: 0 }
+    if (!cursorPosition || state !== "typing-identifier") return { x: 0, y: 0 }
 
     // Limit the eye movement range
     const maxMove = 4
@@ -92,8 +92,8 @@ export function AnimatedAiBot({ state, cursorPosition }: AnimatedAiBotProps) {
                 <motion.div
                   className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-blue-500"
                   animate={{
-                    x: state === "typing-username" ? eyePosition.x : 0,
-                    y: state === "typing-username" ? eyePosition.y : 0,
+                    x: state === "typing-identifier" ? eyePosition.x : 0,
+                    y: state === "typing-identifier" ? eyePosition.y : 0,
                     width: state === "password-visible" ? "8px" : "12px",
                     height: state === "password-visible" ? "4px" : "12px",
                   }}
@@ -123,8 +123,8 @@ export function AnimatedAiBot({ state, cursorPosition }: AnimatedAiBotProps) {
                 <motion.div
                   className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-blue-500"
                   animate={{
-                    x: state === "typing-username" ? eyePosition.x : 0,
-                    y: state === "typing-username" ? eyePosition.y : 0,
+                    x: state === "typing-identifier" ? eyePosition.x : 0,
+                    y: state === "typing-identifier" ? eyePosition.y : 0,
                     width: state === "password-visible" ? "8px" : "12px",
                     height: state === "password-visible" ? "4px" : "12px",
                   }}

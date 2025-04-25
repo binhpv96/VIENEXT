@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class RegisterDTO {
     private String phoneNumber;
+    private String username;
 
     @NotBlank(message = "Password is required")
     private String password;
