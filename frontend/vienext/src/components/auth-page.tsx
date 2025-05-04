@@ -9,6 +9,7 @@ import { translations } from "@/lib/translations"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { QrCodeLogin } from "@/components/qr-code-login"
 import { SocialLogin } from "@/components/social-login"
+import { Logo } from "./logo"
 
 export function AuthPage() {
   const [language, setLanguage] = useState<"en" | "vi">("en")
@@ -38,10 +39,7 @@ export function AuthPage() {
 
       {/* Header with controls */}
       <header className="relative z-10 flex w-full items-center justify-between p-6">
-        <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500"></div>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">NexusAuth</span>
-        </div>
+        <Logo size="sm"/>
         <div className="flex items-center space-x-4">
           <LanguageSwitcher language={language} setLanguage={setLanguage} />
           <ThemeToggle />

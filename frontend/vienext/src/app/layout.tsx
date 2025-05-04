@@ -1,22 +1,34 @@
+"use client"
+
+import { useState } from "react"
 import type React from "react"
 import "@/app/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-
-export const metadata = {
-  title: "NexusAuth - Futuristic Web3 Authentication",
-  description: "A modern web3-style authentication system with futuristic design",
-}
+import { MainLayout } from "@/components/main-layout"
+import { usePathname } from "next/navigation"
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const [language, setLanguage] = useState<"en" | "vi">("en")
+  const pathname = usePathname()
+  
+  // Chỉ hiển thị MainLayout nếu không phải trang đăng nhập
+  const isAuthPage = pathname === "/"
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          {children}
+          {isAuthPage ? (
+            children
+          ) : (
+            <MainLayout language={language} setLanguage={setLanguage}>
+              {children}
+            </MainLayout>
+          )}
         </ThemeProvider>
       </body>
     </html>
