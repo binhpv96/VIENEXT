@@ -3,8 +3,10 @@
 import { useState } from "react"
 import type React from "react"
 import "@/app/globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 import { MainLayout } from "@/components/main-layout"
+import { ThemeProvider } from "@/components/theme-provider"
+import { LanguageProvider } from "@/contexts/language-context"
+import { AppProvider } from "@/contexts/app-context"
 import { usePathname } from "next/navigation"
 
 export default function RootLayout({
@@ -21,14 +23,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          {isAuthPage ? (
-            children
-          ) : (
-            <MainLayout language={language} setLanguage={setLanguage}>
-              {children}
-            </MainLayout>
-          )}
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <LanguageProvider>
+            <AppProvider>
+              {isAuthPage ? (
+                children
+              ) : (
+                <MainLayout language={language} setLanguage={setLanguage}>
+                  {children}
+                </MainLayout>
+              )}
+            </AppProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

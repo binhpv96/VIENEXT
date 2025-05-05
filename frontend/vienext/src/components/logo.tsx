@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
-import Image from "next/image"
+import { useState, useEffect } from "react"
 
 interface LogoProps {
   size?: "sm" | "md" | "lg"
@@ -12,6 +12,7 @@ interface LogoProps {
 
 export function Logo({ size = "md", showText = true, textContent = "VIENEXT" }: LogoProps) {
   const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   // Kích thước dựa trên prop size
   const dimensions = {
@@ -22,7 +23,13 @@ export function Logo({ size = "md", showText = true, textContent = "VIENEXT" }: 
 
   const { width, height } = dimensions[size]
 
-    const logoSrc = theme === "dark" ? "/assets/images/logo.svg" : "/assets/images/logo-light.svg"
+  // Tránh hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Chọn logo phù hợp với theme
+  const logoSrc = mounted ? (theme === "dark" ? "/images/logo.svg" : "/images/logo-light.svg") : null
 
   return (
     <div className="relative flex items-center">
@@ -33,14 +40,18 @@ export function Logo({ size = "md", showText = true, textContent = "VIENEXT" }: 
         whileTap={{ scale: 0.95 }}
         transition={{ duration: 0.2 }}
       >
-        <Image
-          src={logoSrc || "/placeholder.svg"}
-          alt="Logo"
-          width={width}
-          height={height}
-          className="object-contain"
-          priority
-        />
+        {mounted ? (
+          <img
+            src={logoSrc || "/placeholder.svg"}
+            alt="Logo"
+            width={width}
+            height={height}
+            className="object-contain"
+            // priority="true"
+          />
+        ) : (
+          <div style={{ width, height }} className="bg-slate-200 dark:bg-slate-700 rounded-full" />
+        )}
 
         {/* Hiệu ứng ánh sáng (tùy chọn) */}
         <motion.div
