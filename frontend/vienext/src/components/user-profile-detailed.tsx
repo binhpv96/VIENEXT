@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ThoughtBubble } from "@/components/thought-bubble"
-import { useApp } from "@/contexts/app-context"
+import { useApp } from "@/contexts/theme-context"
 import { translations } from "@/lib/translations"
 
 interface UserProfileDetailedProps {

@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils"
 import { UserProfile } from "@/components/user-profile"
 import { UserProfileDetailed } from "@/components/user-profile-detailed"
 import { Badge } from "@/components/ui/badge"
-import { useApp } from "@/contexts/app-context"
+import { useApp } from "@/contexts/theme-context"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "next-themes"
 
@@ -142,7 +142,7 @@ export function Sidebar({ userPlan, userData }: SidebarProps) {
         <div className="flex h-16 items-center border-b border-slate-200 px-4 dark:border-slate-800">
           <div className="flex items-center space-x-2">
             <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-500"></div>
-            <span className="text-xl font-bold text-slate-900 dark:text-white">TechAuth</span>
+            <span className="text-xl font-bold text-slate-900 dark:text-white">VIENEXT</span>
           </div>
           {getPlanIcon() && <div className="ml-2">{getPlanIcon()}</div>}
         </div>

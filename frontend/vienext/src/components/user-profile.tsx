@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils"
 import { ThoughtBubble } from "@/components/thought-bubble"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { useApp } from "@/contexts/app-context"
+import { useApp } from "@/contexts/theme-context"
+import { useLanguage } from "@/contexts/language-context"
 import { translations } from "@/lib/translations"
 import { motion } from "framer-motion"
 
@@ -33,7 +34,8 @@ export function UserProfile({ userData, userPlan, onClose }: UserProfileProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const thoughtTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const { language } = useApp()
+  // const { language } = useApp()
+  const { language } = useLanguage()
   const t = translations[language]
 
   // Hàm xử lý khi người dùng thay đổi trạng thái
@@ -95,7 +97,7 @@ export function UserProfile({ userData, userPlan, onClose }: UserProfileProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-slate-800">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t.personalInfo}</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t.personalInfo || "persional infor"}</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-5 w-5" />
         </Button>

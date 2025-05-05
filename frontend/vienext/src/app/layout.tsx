@@ -6,7 +6,7 @@ import "@/app/globals.css"
 import { MainLayout } from "@/components/main-layout"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LanguageProvider } from "@/contexts/language-context"
-import { AppProvider } from "@/contexts/app-context"
+import { AppProvider } from "@/contexts/theme-context"
 import { usePathname } from "next/navigation"
 
 export default function RootLayout({
