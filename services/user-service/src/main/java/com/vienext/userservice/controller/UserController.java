@@ -1,11 +1,17 @@
 package com.vienext.userservice.controller;
 
+import com.vienext.userservice.config.JwtUtil;
 import com.vienext.userservice.dto.*;
+import com.vienext.userservice.exception.ForbiddenException;
+import com.vienext.userservice.exception.NotFoundException;
+import com.vienext.userservice.exception.UnauthorizedException;
 import com.vienext.userservice.model.User;
 import com.vienext.userservice.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,12 +19,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@Valid @RequestBody RegisterDTO registerDTO) {
@@ -39,21 +50,15 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginDTO) {
-        String token = userService.login(loginDTO);
-
-        // Tạo cookie
-        ResponseCookie cookie = ResponseCookie.from("token", token)
-                .httpOnly(true) // Ngăn JavaScript truy cập cookie
-                .secure(false) // Chỉ áp dụng ở HTTPS nếu true
-                .sameSite("Strict") // Ngăn cookie bị gửi trong request cross-site, bảo vệ khỏi CSRF.
-                .path("/")
-                .maxAge(7 * 24 * 60 * 60) // 7 ngày
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body("Login successful");
+    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginDTO, HttpServletResponse response) {
+        try {
+            Map<String, Object> responseBody = userService.login(loginDTO, response);
+            return ResponseEntity.ok(responseBody);
+        } catch (NotFoundException | ForbiddenException | UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("An error occurred");
+        }
     }
 
     @PostMapping("/update-status")

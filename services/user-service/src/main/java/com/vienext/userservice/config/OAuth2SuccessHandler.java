@@ -22,20 +22,19 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
-    private final String redirectUrl;
+    private final String baseRedirectUrl;
 
     @Autowired
     public OAuth2SuccessHandler(UserService userService, JwtUtil jwtUtil, UserRepository userRepository,
-                                @Value("${app.redirect-url:http://localhost:3000/callback}") String redirectUrl) {
+                                @Value("${app.redirect-base-url:http://localhost:3000}") String baseRedirectUrl) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
-        this.redirectUrl = redirectUrl;
+        this.baseRedirectUrl = baseRedirectUrl;
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
-        // Trích xuất thông tin người dùng
         String email = null;
         String username = null;
         String userIdFromProvider = null;
@@ -44,25 +43,19 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
             email = oidcUser.getEmail();
             username = oidcUser.getPreferredUsername();
-            userIdFromProvider = oidcUser.getSubject(); // ID duy nhất từ OIDC
+            userIdFromProvider = oidcUser.getSubject();
         } else if (authentication.getPrincipal() instanceof OAuth2User) {
             OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
             email = (String) oauth2User.getAttributes().get("email");
             username = (String) oauth2User.getAttributes().get("login");
-            // Xử lý id có thể là Integer
             Object id = oauth2User.getAttributes().get("id");
-            userIdFromProvider = (id != null) ? id.toString() : null; // Chuyển đổi an toàn
+            userIdFromProvider = (id != null) ? id.toString() : null;
         }
 
-        // Gán giá trị mặc định nếu null, đảm bảo không tái gán sau này
         final String finalEmail = (email != null) ? email : (username != null ? username + "@temp-provider.com" : userIdFromProvider + "@temp-provider.com");
         final String finalUsername = (username != null) ? username : "user_" + userIdFromProvider;
-        final String finalUserIdFromProvider = (userIdFromProvider != null) ? userIdFromProvider : null;
-        if (finalUserIdFromProvider == null) {
-            throw new IllegalStateException("Cannot determine user ID from OAuth2 provider");
-        }
+//        final String finalUserIdFromProvider = (userIdFromProvider != null) ? userIdFromProvider : throwIllegalStateException();
 
-        // Tìm hoặc tạo user
         User user = userRepository.findByEmail(finalEmail)
                 .orElseGet(() -> {
                     User newUser = User.builder()
@@ -77,28 +70,25 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                     return userRepository.save(newUser);
                 });
 
-        // Cập nhật thông tin
         user.setLastLogin(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        // Tạo token JWT
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getId());
 
-        // Lưu token vào Redis
         try {
-            userService.storeTokenInRedis(user.getUsername(), token);
+            userService.storeTokenInRedis(user.getEmail(), token);
         } catch (Exception e) {
             System.err.println("Failed to store token in Redis: " + e.getMessage());
-            // Tiếp tục dù Redis lỗi, vì token vẫn hoạt động qua cookie
         }
 
-        // Set token vào HttpOnly Cookie
         String cookieValue = String.format("token=%s; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=%d",
-                token, 7 * 24 * 60 * 60); // 7 ngày
+                token, 7 * 24 * 60 * 60);
         response.addHeader("Set-Cookie", cookieValue);
 
-        // Chuyển hướng
+        // Redirect trực tiếp đến trang feed với thông tin người dùng
+        // NOTE: Nhớ không gửi thông tin người dùng :))) giờ tao gửi để test xem login thành công hay không thôi nhé
+        String redirectUrl = baseRedirectUrl + "/dashboard?username=" + finalUsername;
         response.sendRedirect(redirectUrl);
     }
 

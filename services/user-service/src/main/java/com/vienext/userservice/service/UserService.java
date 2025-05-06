@@ -12,10 +12,10 @@ import com.vienext.userservice.exception.UnauthorizedException;
 import com.vienext.userservice.model.SubscriptionPlan;
 import com.vienext.userservice.model.User;
 import com.vienext.userservice.repository.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.ResponseCookie;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
@@ -174,12 +174,12 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public String login(LoginDTO loginDTO) {
+    public Map<String, Object> login(LoginDTO loginDTO, HttpServletResponse response) {
         String identifier = loginDTO.getIdentifier();
         String password = loginDTO.getPassword();
         User user = userRepository.findByEmail(identifier)
                 .orElseGet(() -> userRepository.findByPhoneNumber(identifier)
-                .orElseThrow(() -> new NotFoundException("User not found")));
+                        .orElseThrow(() -> new NotFoundException("User not found")));
 
         if ("PENDING".equals(user.getStatus())) {
             throw new ForbiddenException("Account is not activated.");
@@ -198,20 +198,20 @@ public class UserService {
                 user.getId()
         );
 
-        // Tạo cookie với các thuộc tính HttpOnly, Secure, SameSite
-        ResponseCookie cookie = ResponseCookie.from("token", token)
-                .httpOnly(true)
-                .secure(true) // Chỉ áp dụng ở HTTPS
-                .sameSite("Strict")
-                .path("/") // Cookie áp dụng cho toàn bộ ứng dụng
-                .maxAge(7 * 24 * 60 * 60) // Thời gian sống 7 ngày (tùy chỉnh)
-                .build();
+        // Set token vào HttpOnly Cookie
+        String cookieValue = String.format("token=%s; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=%d",
+                token, 7 * 24 * 60 * 60); // 7 ngày
+        response.addHeader("Set-Cookie", cookieValue);
 
-        // Lưu token vào Redis (không bắt buộc) vì đã có cookie quản lí token, có thể xóa
+        // Lưu token vào Redis (tùy chọn, có thể bỏ nếu không cần)
         storeTokenInRedis(user.getEmail() != null ? user.getEmail() : user.getPhoneNumber(), token);
 
-        // Trả về cookie trong header
-        return token; // Tạm thời giữ để kiểm tra, sau đó sẽ thay bằng ResponseEntity
+        // Trả về thông tin người dùng và redirect URL
+        // NOTE: Nhớ không gửi thông tin người dùng, giờ tao gửi để test xem login thành công hay không thôi nhé  :))) 
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("username", user.getUsername());
+        responseBody.put("redirectUrl", "/feed?username=" + user.getUsername());
+        return responseBody;
     }
 
     // admin update status of user

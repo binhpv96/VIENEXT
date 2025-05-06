@@ -34,7 +34,7 @@ public class User {
 
     private String gender; // MALE, FEMALE, OTHER
 
-    private String address;
+    private String address; // sau này chia ra rõ ràng để thuận tiện cho các user tìm người dùng
 
     private String profilePicture;
 
