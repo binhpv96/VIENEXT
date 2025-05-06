@@ -8,7 +8,7 @@ interface AppContextType {
   toggleTheme: () => void
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined)
+const ThemeContext = createContext<AppContextType | undefined>(undefined)
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { theme, setTheme } = useTheme()
@@ -18,18 +18,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AppContext.Provider
+    <ThemeContext.Provider
       value={{
         toggleTheme,
       }}
     >
       {children}
-    </AppContext.Provider>
+    </ThemeContext.Provider>
   )
 }
 
 export function useApp() {
-  const context = useContext(AppContext)
+  const context = useContext(ThemeContext)
   if (context === undefined) {
     throw new Error("useApp must be used within an AppProvider")
   }

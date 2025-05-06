@@ -3,12 +3,16 @@ package com.vienext.userservice.config;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,9 +73,17 @@ public class JwtUtil {
         }
     }
 
-    public Boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+    public Boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                    .build()
+                    .parseSignedClaims(token);
+            return !isTokenExpired(token);
+        } catch (JwtException e) {
+            System.err.println("Token validation failed: " + e.getMessage());
+            return false;
+        }
     }
 
     private Boolean isTokenExpired(String token) {
@@ -80,5 +92,26 @@ public class JwtUtil {
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    // Thêm phương thức getAuthentication
+    public Authentication getAuthentication(String token) {
+        // Trích xuất username và role từ token
+        String username = extractUsername(token);
+        String role = extractRole(token);
+
+        // Tạo UserDetails từ thông tin trong token
+        UserDetails userDetails = new User(
+                username,
+                "", // Password không cần thiết vì đã xác thực qua token
+                Collections.singletonList(new SimpleGrantedAuthority(role))
+        );
+
+        // Tạo Authentication object
+        return new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                userDetails,
+                token,
+                userDetails.getAuthorities()
+        );
     }
 }

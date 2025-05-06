@@ -15,6 +15,7 @@ import com.vienext.userservice.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseCookie;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
@@ -196,8 +197,21 @@ public class UserService {
                 user.getRole(),
                 user.getId()
         );
-        storeTokenInRedis(user.getEmail(), token);
-        return token;
+
+        // Tạo cookie với các thuộc tính HttpOnly, Secure, SameSite
+        ResponseCookie cookie = ResponseCookie.from("token", token)
+                .httpOnly(true)
+                .secure(true) // Chỉ áp dụng ở HTTPS
+                .sameSite("Strict")
+                .path("/") // Cookie áp dụng cho toàn bộ ứng dụng
+                .maxAge(7 * 24 * 60 * 60) // Thời gian sống 7 ngày (tùy chỉnh)
+                .build();
+
+        // Lưu token vào Redis (không bắt buộc) vì đã có cookie quản lí token, có thể xóa
+        storeTokenInRedis(user.getEmail() != null ? user.getEmail() : user.getPhoneNumber(), token);
+
+        // Trả về cookie trong header
+        return token; // Tạm thời giữ để kiểm tra, sau đó sẽ thay bằng ResponseEntity
     }
 
     // admin update status of user

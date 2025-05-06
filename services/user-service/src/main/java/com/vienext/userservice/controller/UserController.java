@@ -5,7 +5,8 @@ import com.vienext.userservice.model.User;
 import com.vienext.userservice.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -26,6 +27,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+
     @PostMapping("/verify-otp")
     public ResponseEntity<String> verifyOtp(@RequestBody OtpVerificationRequest request) {
         boolean isValid = userService.verifyOtp(request.getEmail(), request.getOtp());
@@ -37,8 +39,21 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public String login(@Valid @RequestBody LoginDTO loginDTO) {
-        return userService.login(loginDTO);
+    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginDTO) {
+        String token = userService.login(loginDTO);
+
+        // Tạo cookie
+        ResponseCookie cookie = ResponseCookie.from("token", token)
+                .httpOnly(true) // Ngăn JavaScript truy cập cookie
+                .secure(false) // Chỉ áp dụng ở HTTPS nếu true
+                .sameSite("Strict") // Ngăn cookie bị gửi trong request cross-site, bảo vệ khỏi CSRF.
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60) // 7 ngày
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Login successful");
     }
 
     @PostMapping("/update-status")

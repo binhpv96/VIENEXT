@@ -1,13 +1,10 @@
 package com.vienext.userservice.config;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -15,19 +12,21 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Autowired
-    private OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
+    private OAuth2SuccessHandler oauth2SuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors().configurationSource(corsConfigurationSource()) // Áp dụng CORS
+                .and()
+                .csrf().disable() // Tắt CSRF vì dùng JWT và SameSite=Strict
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/users/register",
@@ -39,27 +38,18 @@ public class SecurityConfig {
                                 "/login/oauth2/code/github",
                                 "/error",
                                 "/favicon.ico",
-                                "/swagger-ui/**",      // Thêm Swagger UI
-                                "/api-docs/**",        // Thêm API docs
-                                "/swagger-ui.html"     // Thêm Swagger UI HTML
+                                "/swagger-ui/**",
+                                "/api-docs/**",
+                                "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers("/api/users/update-status").hasRole("ADMIN")
-                        .requestMatchers("/api/users/request-status-update").authenticated() // Yêu cầu đăng nhập
-                        .requestMatchers("/api/users/verify-status-update").authenticated() // Yêu cầu đăng nhập
+//                        .requestMatchers("/api/users/update-status").hasRole("ROLE_ADMIN") // Thêm ROLE_ prefix
+                        .requestMatchers("/api/users/request-status-update").authenticated()
+                        .requestMatchers("/api/users/verify-status-update").authenticated()
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                )
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            System.out.println("Unauthorized access: " + authException.getMessage());
-                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + authException.getMessage());
-                        })
-                )
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(oauth2LoginSuccessHandler)
-                )
+                .oauth2Login()
+                .successHandler(oauth2SuccessHandler)
+                .and()
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -71,17 +61,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CustomUserDetailsService customUserDetailsService() {
-        return new CustomUserDetailsService();
-    }
-
-    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Accept", "X-Requested-With"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(List.of("Location"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
