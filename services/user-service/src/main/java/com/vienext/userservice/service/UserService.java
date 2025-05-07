@@ -210,7 +210,7 @@ public class UserService {
         // NOTE: Nhớ không gửi thông tin người dùng, giờ tao gửi để test xem login thành công hay không thôi nhé  :))) 
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("username", user.getUsername());
-        responseBody.put("redirectUrl", "/feed?username=" + user.getUsername());
+        responseBody.put("redirectUrl", "/dashboard?username=" + user.getUsername());
         return responseBody;
     }
 
