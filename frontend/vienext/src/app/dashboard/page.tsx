@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLanguage } from "@/contexts/language-context";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAppStore } from "@/contexts/store";
 import { X } from "lucide-react";
 
 import { PostCard } from "@/components/dashboard/post-card";
@@ -26,12 +26,12 @@ const mockPosts = [
     user: {
       name: "Minh Anh",
       username: "minhanh",
-      avatar: "/placeholder.svg?height=40&width=40&text=MA",
+      avatar: "/api/placeholder?height=40&width=40&text=MA",
       verified: true,
     },
     content:
       "Vừa hoàn thành dự án UI/UX mới! Rất hào hứng để chia sẻ với mọi người 🎉 #UIUXDesign #Design",
-    image: "/placeholder.svg?height=400&width=600&text=UI/UX+Project",
+    image: "/api/placeholder?height=400&width=600&text=UI/UX+Project",
     time: "10 phút trước",
     likes: 24,
     comments: [
@@ -40,7 +40,7 @@ const mockPosts = [
         user: {
           name: "Hoàng Nam",
           username: "hoangnam",
-          avatar: "/placeholder.svg?height=40&width=40&text=HN",
+          avatar: "/api/placeholder?height=40&width=40&text=HN",
           verified: false,
         },
         content: "Tuyệt vời quá! Mình rất thích thiết kế này.",
@@ -52,7 +52,7 @@ const mockPosts = [
         user: {
           name: "Thu Hà",
           username: "thuha",
-          avatar: "/placeholder.svg?height=40&width=40&text=TH",
+          avatar: "/api/placeholder?height=40&width=40&text=TH",
           verified: true,
         },
         content: "Bạn có thể chia sẻ thêm về quy trình làm việc không?",
@@ -69,7 +69,7 @@ const mockPosts = [
     user: {
       name: "Hoàng Nam",
       username: "hoangnam",
-      avatar: "/placeholder.svg?height=40&width=40&text=HN",
+      avatar: "/api/placeholder?height=40&width=40&text=HN",
       verified: false,
     },
     content:
@@ -83,7 +83,7 @@ const mockPosts = [
         user: {
           name: "Quang Minh",
           username: "quangminh",
-          avatar: "/placeholder.svg?height=40&width=40&text=QM",
+          avatar: "/api/placeholder?height=40&width=40&text=QM",
           verified: true,
         },
         content: "Mình đang làm React được 2 năm rồi, bạn cần hỏi gì?",
@@ -100,12 +100,12 @@ const mockPosts = [
     user: {
       name: "Thu Hà",
       username: "thuha",
-      avatar: "/placeholder.svg?height=40&width=40&text=TH",
+      avatar: "/api/placeholder?height=40&width=40&text=TH",
       verified: true,
     },
     content:
       "Chuyến du lịch Đà Nẵng tuần trước. Cảnh đẹp quá mọi người ơi! #TravelVietnam #DaNang",
-    image: "/placeholder.svg?height=400&width=600&text=Da+Nang+Trip",
+    image: "/api/placeholder?height=400&width=600&text=Da+Nang+Trip",
     time: "2 giờ trước",
     likes: 89,
     comments: [
@@ -114,7 +114,7 @@ const mockPosts = [
         user: {
           name: "Minh Anh",
           username: "minhanh",
-          avatar: "/placeholder.svg?height=40&width=40&text=MA",
+          avatar: "/api/placeholder?height=40&width=40&text=MA",
           verified: true,
         },
         content: "Đẹp quá! Lần sau mình cũng muốn đi.",
@@ -126,7 +126,7 @@ const mockPosts = [
         user: {
           name: "Hoàng Nam",
           username: "hoangnam",
-          avatar: "/placeholder.svg?height=40&width=40&text=HN",
+          avatar: "/api/placeholder?height=40&width=40&text=HN",
           verified: false,
         },
         content: "Bạn đi mấy ngày vậy? Chi phí khoảng bao nhiêu?",
@@ -138,7 +138,7 @@ const mockPosts = [
         user: {
           name: "Quang Minh",
           username: "quangminh",
-          avatar: "/placeholder.svg?height=40&width=40&text=QM",
+          avatar: "/api/placeholder?height=40&width=40&text=QM",
           verified: true,
         },
         content: "Nhìn thích thật đấy! Đà Nẵng mùa này đẹp nhất.",
@@ -155,12 +155,12 @@ const mockPosts = [
     user: {
       name: "Quang Minh",
       username: "quangminh",
-      avatar: "/placeholder.svg?height=40&width=40&text=QM",
+      avatar: "/api/placeholder?height=40&width=40&text=QM",
       verified: true,
     },
     content:
       "Vừa đọc xong cuốn sách về AI và tương lai của công nghệ. Thực sự đáng đọc! Ai quan tâm mình có thể chia sẻ tên sách. #AITechnology #TechVietnam",
-    image: "/placeholder.svg?height=400&width=600&text=AI+Book",
+    image: "/api/placeholder?height=400&width=600&text=AI+Book",
     time: "5 giờ trước",
     likes: 45,
     comments: [
@@ -169,7 +169,7 @@ const mockPosts = [
         user: {
           name: "Thu Hà",
           username: "thuha",
-          avatar: "/placeholder.svg?height=40&width=40&text=TH",
+          avatar: "/api/placeholder?height=40&width=40&text=TH",
           verified: true,
         },
         content: "Tên sách là gì vậy bạn?",
@@ -181,7 +181,7 @@ const mockPosts = [
         user: {
           name: "Hoàng Nam",
           username: "hoangnam",
-          avatar: "/placeholder.svg?height=40&width=40&text=HN",
+          avatar: "/api/placeholder?height=40&width=40&text=HN",
           verified: false,
         },
         content: "Mình cũng đang tìm sách về AI, chia sẻ tên với mình nhé!",
@@ -210,7 +210,7 @@ const suggestedUsers = [
     id: 1,
     name: "Lan Anh",
     username: "lananh",
-    avatar: "/placeholder.svg?height=40&width=40&text=LA",
+    avatar: "/api/placeholder?height=40&width=40&text=LA",
     mutual: 5,
     verified: false,
   },
@@ -218,7 +218,7 @@ const suggestedUsers = [
     id: 2,
     name: "Đức Thắng",
     username: "ducthang",
-    avatar: "/placeholder.svg?height=40&width=40&text=DT",
+    avatar: "/api/placeholder?height=40&width=40&text=DT",
     mutual: 3,
     verified: true,
   },
@@ -226,7 +226,7 @@ const suggestedUsers = [
     id: 3,
     name: "Mai Hương",
     username: "maihuong",
-    avatar: "/placeholder.svg?height=40&width=40&text=MH",
+    avatar: "/api/placeholder?height=40&width=40&text=MH",
     mutual: 2,
     verified: false,
   },
@@ -239,7 +239,7 @@ const newMessages = [
     user: {
       name: "Minh Anh",
       username: "minhanh",
-      avatar: "/placeholder.svg?height=40&width=40&text=MA",
+      avatar: "/api/placeholder?height=40&width=40&text=MA",
       online: true,
       verified: true,
       lastActive: null,
@@ -289,7 +289,7 @@ const newMessages = [
     user: {
       name: "Hoàng Nam",
       username: "hoangnam",
-      avatar: "/placeholder.svg?height=40&width=40&text=HN",
+      avatar: "/api/placeholder?height=40&width=40&text=HN",
       online: false,
       verified: false,
       lastActive: "30 phút trước",
@@ -348,7 +348,7 @@ const newMessages = [
     user: {
       name: "Thu Hà",
       username: "thuha",
-      avatar: "/placeholder.svg?height=40&width=40&text=TH",
+      avatar: "/api/placeholder?height=40&width=40&text=TH",
       online: true,
       verified: true,
       lastActive: null,
@@ -403,7 +403,7 @@ const mockNotifications = [
     user: {
       id: 1,
       name: "Minh Anh",
-      avatar: "/placeholder.svg?height=40&width=40&text=MA",
+      avatar: "/api/placeholder?height=40&width=40&text=MA",
       verified: true,
     },
     content: "Bạn đã xem dự án mới của mình chưa?",
@@ -417,7 +417,7 @@ const mockNotifications = [
     user: {
       id: 2,
       name: "Hoàng Nam",
-      avatar: "/placeholder.svg?height=40&width=40&text=HN",
+      avatar: "/api/placeholder?height=40&width=40&text=HN",
       verified: false,
     },
     content: "",
@@ -431,7 +431,7 @@ const mockNotifications = [
     user: {
       id: 3,
       name: "Thu Hà",
-      avatar: "/placeholder.svg?height=40&width=40&text=TH",
+      avatar: "/api/placeholder?height=40&width=40&text=TH",
       verified: true,
     },
     content: "Đẹp quá! Lần sau mình cũng muốn đi.",
@@ -445,7 +445,7 @@ const mockNotifications = [
     user: {
       id: 4,
       name: "Quang Minh",
-      avatar: "/placeholder.svg?height=40&width=40&text=QM",
+      avatar: "/api/placeholder?height=40&width=40&text=QM",
       verified: true,
     },
     content: "",
@@ -458,7 +458,7 @@ const mockNotifications = [
     user: {
       id: 5,
       name: "Lan Anh",
-      avatar: "/placeholder.svg?height=40&width=40&text=LA",
+      avatar: "/api/placeholder?height=40&width=40&text=LA",
       verified: false,
     },
     content: "Bạn nghĩ sao về ý tưởng này @datducnguyen?",
@@ -561,7 +561,7 @@ const emojiCategories = [
 ];
 
 export default function DashboardPage() {
-  const { t } = useLanguage();
+  const { t } = useAppStore();
   const [posts, setPosts] = useState(mockPosts);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [notifications, setNotifications] = useState(mockNotifications);
@@ -632,7 +632,7 @@ export default function DashboardPage() {
       user: {
         name: "Dat Duc Nguyen",
         username: "datducnguyen",
-        avatar: "/placeholder.svg?height=40&width=40&text=DDN",
+        avatar: "/api/placeholder?height=40&width=40&text=DDN",
         verified: true,
       },
       content: content,
@@ -658,7 +658,7 @@ export default function DashboardPage() {
       user: {
         name: "Dat Duc Nguyen",
         username: "datducnguyen",
-        avatar: "/placeholder.svg?height=40&width=40&text=DDN",
+        avatar: "/api/placeholder?height=40&width=40&text=DDN",
         verified: true,
       },
       content: comment,
@@ -864,7 +864,7 @@ export default function DashboardPage() {
               <div className="flex items-center space-x-4">
                 <Avatar>
                   <AvatarImage
-                    src="/placeholder.svg?height=40&width=40&text=DDN"
+                    src="/api/placeholder?height=40&width=40&text=DDN"
                     alt="Profile"
                   />
                   <AvatarFallback>DDN</AvatarFallback>

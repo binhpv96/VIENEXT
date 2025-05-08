@@ -8,14 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Settings, Bookmark, MessageSquare, Heart, Share2, Clock, Star, Crown, ChevronRight } from "lucide-react"
-import { useLanguage } from "@/contexts/language-context"
+import { useAppStore } from "@/contexts/store"
 
 // Mock user data
 const userData = {
   id: "1",
   name: "Dat Duc Nguyen",
   username: "datducnguyen",
-  avatar: "/placeholder.svg?height=128&width=128",
+  avatar: "/api/placeholder?height=128&width=128",
   status: "newbie in new world",
   isOnline: true,
   plan: "premium" as "free" | "premium" | "enterprise",
@@ -23,7 +23,7 @@ const userData = {
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("posts")
-  const { t } = useLanguage()
+  const { t } = useAppStore()
 
   const getPlanBadge = () => {
     switch (userData.plan) {
@@ -59,7 +59,7 @@ export default function ProfilePage() {
         <div className="absolute -bottom-16 left-8">
           <div className="relative">
             <img
-              src={userData.avatar || "/placeholder.svg"}
+              src={userData.avatar || "/api/placeholder"}
               alt="Avatar"
               className="h-32 w-32 rounded-full border-4 border-white object-cover dark:border-slate-900"
             />
@@ -114,7 +114,7 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <img
-                          src={userData.avatar || "/placeholder.svg"}
+                          src={userData.avatar || "/api/placeholder"}
                           alt="Avatar"
                           className="h-8 w-8 rounded-full object-cover"
                         />
@@ -136,7 +136,7 @@ export default function ProfilePage() {
                     </p>
                     <div className="h-40 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
                       <img
-                        src="/placeholder.svg?height=160&width=320"
+                        src="/api/placeholder?height=160&width=320"
                         alt="Post image"
                         className="h-full w-full object-cover"
                       />
@@ -174,7 +174,7 @@ export default function ProfilePage() {
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-4">
                       <img
-                        src={`/placeholder.svg?height=64&width=64&text=User${item}`}
+                        src={`/api/placeholder?height=64&width=64&text=User${item}`}
                         alt="User avatar"
                         className="h-16 w-16 rounded-full object-cover"
                       />
@@ -217,7 +217,7 @@ export default function ProfilePage() {
                   <CardContent className="space-y-4">
                     <div className="h-40 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
                       <img
-                        src={`/placeholder.svg?height=160&width=320&text=Memory${item}`}
+                        src={`/api/placeholder?height=160&width=320&text=Memory${item}`}
                         alt="Memory"
                         className="h-full w-full object-cover"
                       />
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <img
-                          src={`/placeholder.svg?height=32&width=32&text=U${item}`}
+                          src={`/api/placeholder?height=32&width=32&text=U${item}`}
                           alt="User avatar"
                           className="h-8 w-8 rounded-full object-cover"
                         />
@@ -287,7 +287,7 @@ export default function ProfilePage() {
                     </p>
                     <div className="h-40 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
                       <img
-                        src={`/placeholder.svg?height=160&width=320&text=Saved${item}`}
+                        src={`/api/placeholder?height=160&width=320&text=Saved${item}`}
                         alt="Saved post"
                         className="h-full w-full object-cover"
                       />
@@ -306,7 +306,7 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <img
-                          src={`/placeholder.svg?height=32&width=32&text=U${item}`}
+                          src={`/api/placeholder?height=32&width=32&text=U${item}`}
                           alt="User avatar"
                           className="h-8 w-8 rounded-full object-cover"
                         />

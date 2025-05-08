@@ -29,7 +29,8 @@ export function Logo({ size = "md", showText = true, textContent = "VIENEXT" }: 
   }, [])
 
   // Chọn logo phù hợp với theme
-  const logoSrc = mounted ? (theme === "dark" ? "/images/logo.svg" : "/images/logo-light.svg") : null
+  // const logoSrc = mounted ? (theme === "dark" ? "/images/logo" : "/images/logo-light") : null
+  const logoSrc = null
 
   return (
     <div className="relative flex items-center">
@@ -42,7 +43,7 @@ export function Logo({ size = "md", showText = true, textContent = "VIENEXT" }: 
       >
         {mounted ? (
           <img
-            src={logoSrc || "/placeholder.svg"}
+            src={logoSrc || "/api/placeholder"}
             alt="Logo"
             width={width}
             height={height}

@@ -26,12 +26,3 @@ export const apiClient = {
     return response.json()
   },
 }
-
-export async function fetchUserData() {
-  try {
-    return await apiClient.get("/user")
-  } catch (error) {
-    console.error("Error fetching user data:", error)
-    throw error
-  }
-}

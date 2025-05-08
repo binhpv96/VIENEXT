@@ -6,6 +6,8 @@ const publicRoutes = [
 ]
 
 const privateRoutes = [
+    "/",
+    "/dashboard",
     "/feed",
     "/profile"
 ]

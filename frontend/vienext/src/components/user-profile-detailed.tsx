@@ -22,8 +22,7 @@ import { cn } from "@/lib/utils"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ThoughtBubble } from "@/components/thought-bubble"
-import { useApp } from "@/contexts/theme-context"
-import { translations } from "@/lib/translations"
+import { useAppStore } from "@/contexts/store"
 
 interface UserProfileDetailedProps {
   userData: {
@@ -42,8 +41,7 @@ export function UserProfileDetailed({ userData, userPlan, onClose }: UserProfile
   const [activeTab, setActiveTab] = useState("info")
   const [showThought, setShowThought] = useState(false)
 
-  const { language } = useApp()
-  const t = translations[language]
+  const { t } = useAppStore()
 
   useEffect(() => {
     // Hiển thị bong bóng suy nghĩ sau một khoảng thời gian

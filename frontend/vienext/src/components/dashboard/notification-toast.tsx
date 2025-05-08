@@ -38,7 +38,7 @@ export function NotificationToast({ show, onClose, onAction }: NotificationToast
     >
       <div className="flex items-start space-x-3">
         <Avatar>
-          <AvatarImage src="/placeholder.svg?height=40&width=40&text=MA" alt="Minh Anh" />
+          <AvatarImage src="/api/placeholder?height=40&width=40&text=MA" alt="Minh Anh" />
           <AvatarFallback>MA</AvatarFallback>
         </Avatar>
         <div className="flex-1">

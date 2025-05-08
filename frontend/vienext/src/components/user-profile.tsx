@@ -1,72 +1,67 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useRef, useEffect } from "react"
-import { X, Edit3, Circle, Star, Crown, Heart, MessageSquare } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { ThoughtBubble } from "@/components/thought-bubble"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { useApp } from "@/contexts/theme-context"
-import { useLanguage } from "@/contexts/language-context"
-import { translations } from "@/lib/translations"
-import { motion } from "framer-motion"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { X, Edit3, Circle, Star, Crown, Heart, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ThoughtBubble } from "@/components/thought-bubble";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useAppStore } from "@/contexts/store";
+import { motion } from "framer-motion";
 
 interface UserProfileProps {
   userData: {
-    id: string
-    name: string
-    username: string
-    avatar: string
-    status: string
-    isOnline: boolean
-  }
-  userPlan: "free" | "premium" | "enterprise"
-  onClose: () => void
+    id: string;
+    name: string;
+    username: string;
+    avatar: string;
+    status: string;
+    isOnline: boolean;
+  };
+  userPlan: "free" | "premium" | "enterprise";
+  onClose: () => void;
 }
 
 export function UserProfile({ userData, userPlan, onClose }: UserProfileProps) {
-  const [status, setStatus] = useState(userData.status)
-  const [isEditingStatus, setIsEditingStatus] = useState(false)
-  const [showThought, setShowThought] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const thoughtTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [status, setStatus] = useState(userData.status);
+  const [isEditingStatus, setIsEditingStatus] = useState(false);
+  const [showThought, setShowThought] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const thoughtTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // const { language } = useApp()
-  const { language } = useLanguage()
-  const t = translations[language]
+  const { language, setLanguage, t } = useAppStore();
 
   // Hàm xử lý khi người dùng thay đổi trạng thái
   const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStatus(e.target.value)
-  }
+    setStatus(e.target.value);
+  };
 
   // Lưu trạng thái mới
   const saveStatus = () => {
-    setIsEditingStatus(false)
+    setIsEditingStatus(false);
     // Đây là nơi bạn có thể gọi API để lưu trạng thái mới
-  }
+  };
 
   // Hiệu ứng hiển thị bong bóng suy nghĩ
   useEffect(() => {
     // Hiển thị bong bóng suy nghĩ sau một khoảng thời gian
     thoughtTimeoutRef.current = setTimeout(() => {
-      setShowThought(true)
-    }, 1000)
+      setShowThought(true);
+    }, 1000);
 
     return () => {
       if (thoughtTimeoutRef.current) {
-        clearTimeout(thoughtTimeoutRef.current)
+        clearTimeout(thoughtTimeoutRef.current);
       }
-    }
-  }, [status])
+    };
+  }, [status]);
 
   // Mở dialog để chỉnh sửa suy nghĩ
   const openEditThoughtDialog = () => {
-    setIsDialogOpen(true)
-  }
+    setIsDialogOpen(true);
+  };
 
   const getPlanBadge = () => {
     switch (userPlan) {
@@ -76,28 +71,28 @@ export function UserProfile({ userData, userPlan, onClose }: UserProfileProps) {
             <Star className="h-3 w-3" />
             <span>{t.premium}</span>
           </div>
-        )
+        );
       case "enterprise":
         return (
           <div className="flex items-center space-x-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
             <Crown className="h-3 w-3" />
             <span>{t.enterprise}</span>
           </div>
-        )
+        );
       default:
         return (
           <div className="flex items-center space-x-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-300">
             <Circle className="h-3 w-3" />
             <span>{t.free}</span>
           </div>
-        )
+        );
     }
-  }
+  };
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-slate-800">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t.personalInfo || "persional infor"}</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t.personalInfo || "Personal Information"}</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-5 w-5" />
         </Button>
@@ -109,7 +104,7 @@ export function UserProfile({ userData, userPlan, onClose }: UserProfileProps) {
           <div className="absolute -bottom-10 left-4">
             <div className="relative">
               <img
-                src={userData.avatar || "/placeholder.svg?height=80&width=80"}
+                src={userData.avatar || "/api/placeholder?height=80&width=80"}
                 alt="Avatar"
                 className="h-20 w-20 rounded-full border-4 border-white object-cover dark:border-slate-900"
               />
@@ -137,12 +132,12 @@ export function UserProfile({ userData, userPlan, onClose }: UserProfileProps) {
           <div className="flex items-center space-x-2">
             {isEditingStatus ? (
               <div className="flex w-full items-center space-x-2">
-                <input
+                <Input
                   type="text"
                   value={status}
                   onChange={handleStatusChange}
-                  className="flex-1 rounded-md border border-slate-300 px-3 py-1 text-sm focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   placeholder={t.setYourStatus}
+                  className="border-slate-300 dark:border-slate-700"
                   autoFocus
                 />
                 <Button size="sm" onClick={saveStatus}>
@@ -247,8 +242,8 @@ export function UserProfile({ userData, userPlan, onClose }: UserProfileProps) {
             </Button>
             <Button
               onClick={() => {
-                saveStatus()
-                setIsDialogOpen(false)
+                saveStatus();
+                setIsDialogOpen(false);
               }}
             >
               {t.save}
@@ -257,5 +252,5 @@ export function UserProfile({ userData, userPlan, onClose }: UserProfileProps) {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

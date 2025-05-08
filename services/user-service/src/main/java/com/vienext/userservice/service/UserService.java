@@ -210,7 +210,7 @@ public class UserService {
         // NOTE: Nhớ không gửi thông tin người dùng, giờ tao gửi để test xem login thành công hay không thôi nhé  :))) 
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("username", user.getUsername());
-        responseBody.put("redirectUrl", "/dashboard?username=" + user.getUsername());
+        responseBody.put("redirectUrl", "/dashboard");
         return responseBody;
     }
 
@@ -301,10 +301,25 @@ public class UserService {
         return mapToUserDTO(user);
     }
 
+    public UserDTO getCurrentUser() {
+        // Lấy thông tin người dùng từ token
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() == null) {
+            throw new UnauthorizedException("User is not authenticated");
+        }
+
+        String identifier = authentication.getName(); // Email or phonenumber from token
+        User user = userRepository.findByEmail(identifier)
+                .orElseGet(() -> userRepository.findByPhoneNumber(identifier)
+                .orElseThrow(() -> new NotFoundException("User not found")));
+
+        return mapToUserDTO(user);
+    }
+
     public UserDTO getUserById(String userId) {
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
-            throw new RuntimeException("User not found with ID: " + userId);
+            throw new NotFoundException("User not found with ID: " + userId);
         }
 
         User user = userOptional.get();
@@ -312,20 +327,9 @@ public class UserService {
         UserDTO userDTO = new UserDTO();
         userDTO.setId(user.getId());
         userDTO.setUsername(user.getUsername());
-        userDTO.setEmail(user.getEmail());
-        userDTO.setPhoneNumber(user.getPhoneNumber());
-        userDTO.setRole(user.getRole());
-        userDTO.setFirstName(user.getFirstName());
-        userDTO.setLastName(user.getLastName());
-        userDTO.setDateOfBirth(user.getDateOfBirth());
-        userDTO.setGender(user.getGender());
-        userDTO.setAddress(user.getAddress());
+        userDTO.setEmail(user.getEmail()); // Có thể ẩn nếu cần bảo mật
         userDTO.setProfilePicture(user.getProfilePicture());
-        userDTO.setCreatedAt(user.getCreatedAt());
-        userDTO.setUpdatedAt(user.getUpdatedAt());
-        userDTO.setLastLogin(user.getLastLogin());
         userDTO.setStatus(user.getStatus());
-        userDTO.setSubscriptionPlan(user.getSubscriptionPlan());
 
         return userDTO;
     }
@@ -429,5 +433,22 @@ public class UserService {
 
     public void storeTokenInRedis(String email, String token) {
         System.out.println("Storing token for user: " + email + ", token: " + token);
+    }
+
+    public void logout(HttpServletResponse response) {
+        // Lấy thông tin người dùng từ token
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+
+        String identifier = authentication.getName(); // Email hoặc phoneNumber từ token
+
+        // Xóa token khỏi Redis (nếu sử dụng)
+        redisTemplate.delete(identifier);
+
+        // Xóa cookie bằng cách set Max-Age=0
+        String cookieValue = String.format("token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0");
+        response.addHeader("Set-Cookie", cookieValue);
     }
 }

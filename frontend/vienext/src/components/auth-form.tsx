@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, User, Lock } from "lucide-react"
 import { translations } from "@/lib/translations"
 import { AnimatedAiBot } from "@/components/animated-ai-bot"
+import { useAppStore } from "@/contexts/store"
 
 interface AuthFormProps {
   isLogin: boolean
@@ -33,6 +34,7 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
   const [email, setEmail] = useState("")
 
   const router = useRouter()
+  const { setIsAuthenticated } = useAppStore() 
   const identifierInputRef = useRef<HTMLInputElement>(null)
 
   const t = translations[language]
@@ -145,20 +147,20 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: identifier, // Email hoặc số điện thoại
+          email: identifier,
           password: password,
-          username: username || undefined, // Gửi username nếu có, nếu không thì để backend tạo random
+          username: username || undefined,
         }),
       })
 
       if (!response.ok) {
         const errorText = await response.text()
-        throw new Error(errorText ||"Registration failed")
+        throw new Error(errorText || "Registration failed")
       }
 
-      setEmail(identifier) // Lưu email để dùng khi xác thực OTP
-      setShowOtpInput(true) // Hiển thị form nhập OTP
-      setError( "OTP has been sent to your email")
+      setEmail(identifier)
+      setShowOtpInput(true)
+      setError("OTP has been sent to your email")
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -194,7 +196,7 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
         throw new Error(errorText || "OTP verification failed")
       }
 
-      router.push("/auth?mode=login") // Chuyển hướng về trang đăng nhập sau khi xác thực thành công
+      router.push("/auth?mode=login")
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -204,7 +206,7 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     if (!isLogin) {
-      return handleRegister(e) // Xử lý đăng ký
+      return handleRegister(e)
     }
 
     e.preventDefault()
@@ -239,9 +241,7 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
         const errorText = await response.text()
         throw new Error(errorText || t.loginFailed)
       }
-
-      const token = await response.text()
-      localStorage.setItem("authToken", token)
+      setIsAuthenticated(true) // Cập nhật trạng thái xác thực
       router.push("/dashboard")
     } catch (err: any) {
       setError(err.message || t.loginFailed)
@@ -287,7 +287,7 @@ export function AuthForm({ isLogin, language }: AuthFormProps) {
             className="group relative w-full overflow-hidden bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400"
           >
             <span className="relative z-10">
-              {isLoading ? t.loading : ("Verify OTP")}
+              {isLoading ? t.loading : "Verify OTP"}
             </span>
             <span className="absolute inset-0 z-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 transition-opacity group-hover:opacity-100"></span>
           </Button>

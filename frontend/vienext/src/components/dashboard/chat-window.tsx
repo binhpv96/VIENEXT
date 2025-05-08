@@ -155,7 +155,7 @@ export function ChatWindow({
           <div key={msg.id} className={`mb-2 flex ${msg.sender === "datducnguyen" ? "justify-end" : "justify-start"}`}>
             {msg.sender !== "datducnguyen" && (
               <Avatar className="mr-2 h-6 w-6">
-                <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                <AvatarImage src={user.avatar || "/api/placeholder"} alt={user.name} />
                 <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
               </Avatar>
             )}

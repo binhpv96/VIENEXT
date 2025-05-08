@@ -61,7 +61,7 @@ export function PostCard({ post, onLike, onSave, onShowComments, onShowPostDetai
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Avatar>
-                <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt={post.user.name} />
+                <AvatarImage src={post.user.avatar || "/api/placeholder"} alt={post.user.name} />
                 <AvatarFallback>{post.user.name.substring(0, 2)}</AvatarFallback>
               </Avatar>
               <div>

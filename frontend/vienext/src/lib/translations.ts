@@ -1,6 +1,9 @@
-export type Language = "en" | "vi"
+const Language = {
+  EN: "en",
+  VI: "vi",
+};
 
-export const translations = {
+const translations = {
   en: {
     login: "Login",
     register: "Register",
@@ -31,7 +34,6 @@ export const translations = {
     orContinueWith: "Or continue with",
     socialLoginInfo: "By continuing, you agree to our Terms of Service and Privacy Policy",
     allRightsReserved: "All rights reserved.",
-    // Personal info translations
     personalInfo: "Personal Information",
     setYourStatus: "Set your status...",
     save: "Save",
@@ -120,7 +122,6 @@ export const translations = {
     likedDaysAgo: "Liked 5 days ago",
     likedPostContent: "Content of the post you liked about",
     personalDevelopment: "personal development",
-    // Feed page translations
     yourProfile: "Your Profile",
     quickLinks: "Quick Links",
     friends: "Friends",
@@ -170,7 +171,6 @@ export const translations = {
     orContinueWith: "Hoặc tiếp tục với",
     socialLoginInfo: "Bằng cách tiếp tục, bạn đồng ý với Điều khoản dịch vụ và Chính sách bảo mật của chúng tôi",
     allRightsReserved: "Tất cả các quyền được bảo lưu.",
-    // New translations
     personalInfo: "Thông tin cá nhân",
     setYourStatus: "Đặt trạng thái của bạn...",
     save: "Lưu",
@@ -259,7 +259,6 @@ export const translations = {
     likedDaysAgo: "Đã thích 5 ngày trước",
     likedPostContent: "Nội dung bài viết mà bạn đã thích về chủ đề",
     personalDevelopment: "phát triển bản thân",
-    // Feed page translations
     yourProfile: "Hồ sơ của bạn",
     quickLinks: "Liên kết nhanh",
     friends: "Bạn bè",
@@ -279,4 +278,6 @@ export const translations = {
     clear: "Xóa",
     resultsFound: "Kết quả tìm kiếm cho",
   },
-}
+};
+
+export { Language, translations };

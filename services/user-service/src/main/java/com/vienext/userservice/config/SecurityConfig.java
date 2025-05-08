@@ -32,6 +32,7 @@ public class SecurityConfig {
                                 "/api/users/register",
                                 "/api/users/verify-otp",
                                 "/api/users/login",
+                                "/api/users/logout",
                                 "/oauth2/authorization/google",
                                 "/login/oauth2/code/google",
                                 "/oauth2/authorization/github",

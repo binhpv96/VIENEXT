@@ -81,7 +81,7 @@ export function PostDetailModal({ selectedPost, post, onClose, onAddComment }: P
             <div className="border-b border-slate-200 p-4 dark:border-slate-700">
               <div className="flex items-center space-x-3">
                 <Avatar>
-                  <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt={post.user.name} />
+                  <AvatarImage src={post.user.avatar || "/api/placeholder"} alt={post.user.name} />
                   <AvatarFallback>{post.user.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div>
@@ -129,7 +129,7 @@ export function PostDetailModal({ selectedPost, post, onClose, onAddComment }: P
             <div className="border-t border-slate-200 p-4 dark:border-slate-700">
               <div className="flex space-x-3">
                 <Avatar>
-                  <AvatarImage src="/placeholder.svg?height=40&width=40&text=DDN" alt="Profile" />
+                  <AvatarImage src="/api/placeholder?height=40&width=40&text=DDN" alt="Profile" />
                   <AvatarFallback>DDN</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">

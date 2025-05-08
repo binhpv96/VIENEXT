@@ -164,7 +164,7 @@ export function NotificationCenter({
             <div className="flex items-start space-x-3">
               <div className="relative">
                 <Avatar>
-                  <AvatarImage src={notification.user.avatar || "/placeholder.svg"} alt={notification.user.name} />
+                  <AvatarImage src={notification.user.avatar || "/api/placeholder"} alt={notification.user.name} />
                   <AvatarFallback>{notification.user.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white">

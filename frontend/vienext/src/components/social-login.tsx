@@ -16,7 +16,7 @@ export function SocialLogin({ isLogin, language }: SocialLoginProps) {
     window.location.href = "http://localhost:8081/oauth2/authorization/google"
   }
 
-  const loginWithGithub= () => {
+  const loginWithGithub = () => {
     window.location.href = "http://localhost:8081/oauth2/authorization/github"
   }
 
@@ -30,7 +30,7 @@ export function SocialLogin({ isLogin, language }: SocialLoginProps) {
       >
         <Button
           variant="outline"
-          className="relative w-full border-slate-200 bg-white text-slate-900 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
+          className="relative w-full border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
           onClick={loginWithGithub}
         >
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -44,7 +44,7 @@ export function SocialLogin({ isLogin, language }: SocialLoginProps) {
 
         <Button
           variant="outline"
-          className="relative w-full border-slate-200 bg-white text-slate-900 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
+          className="relative w-full border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
           onClick={loginWithGoogle}
         >
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

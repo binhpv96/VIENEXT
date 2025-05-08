@@ -12,11 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useLanguage } from "@/contexts/language-context"
+import { useAppStore } from "@/contexts/store"
 
 export function ThemeLanguageSwitcher() {
   const { theme, setTheme } = useTheme()
-  const { language, setLanguage, t } = useLanguage()
+  const { language, setLanguage, t } = useAppStore()
   const [mounted, setMounted] = useState(false)
 
   // Tránh hydration mismatch

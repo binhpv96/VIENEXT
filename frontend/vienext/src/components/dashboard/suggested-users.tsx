@@ -43,7 +43,7 @@ export function SuggestedUsers({ users }: SuggestedUsersProps) {
           <div key={user.id} className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Avatar>
-                <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                <AvatarImage src={user.avatar || "/api/placeholder"} alt={user.name} />
                 <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
               </Avatar>
               <div>

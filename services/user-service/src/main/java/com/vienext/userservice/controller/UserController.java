@@ -61,6 +61,12 @@ public class UserController {
         }
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getCurrentUser() {
+        UserDTO userDTO = userService.getCurrentUser();
+        return ResponseEntity.ok(userDTO);
+    }
+
     @PostMapping("/update-status")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<UserDTO> updateUserStatus(
@@ -124,5 +130,17 @@ public class UserController {
 
         UserDTO updatedUserDTO = userService.upgradeUserPlan(userId, upgradePlanDTO);
         return ResponseEntity.ok(updatedUserDTO);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        try {
+            userService.logout(response);
+            return ResponseEntity.ok("Logged out successfully");
+        } catch (UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("An error occurred during logout");
+        }
     }
 }

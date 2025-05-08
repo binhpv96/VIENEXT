@@ -72,7 +72,7 @@ export function CommentSection({ postId, post, onClose, onAddComment }: CommentS
 
         <div className="mb-4 flex items-center space-x-3">
           <Avatar>
-            <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt={post.user.name} />
+            <AvatarImage src={post.user.avatar || "/api/placeholder"} alt={post.user.name} />
             <AvatarFallback>{post.user.name.substring(0, 2)}</AvatarFallback>
           </Avatar>
           <div>
@@ -92,7 +92,7 @@ export function CommentSection({ postId, post, onClose, onAddComment }: CommentS
           {post.comments?.map((comment) => (
             <div key={comment.id} className="flex space-x-3">
               <Avatar>
-                <AvatarImage src={comment.user.avatar || "/placeholder.svg"} alt={comment.user.name} />
+                <AvatarImage src={comment.user.avatar || "/api/placeholder"} alt={comment.user.name} />
                 <AvatarFallback>{comment.user.name.substring(0, 2)}</AvatarFallback>
               </Avatar>
               <div>
@@ -116,7 +116,7 @@ export function CommentSection({ postId, post, onClose, onAddComment }: CommentS
 
         <div className="flex space-x-3">
           <Avatar>
-            <AvatarImage src="/placeholder.svg?height=40&width=40&text=DDN" alt="Profile" />
+            <AvatarImage src="/api/placeholder?height=40&width=40&text=DDN" alt="Profile" />
             <AvatarFallback>DDN</AvatarFallback>
           </Avatar>
           <div className="flex-1">

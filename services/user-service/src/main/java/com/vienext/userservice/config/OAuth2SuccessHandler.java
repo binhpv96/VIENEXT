@@ -88,7 +88,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         // Redirect trực tiếp đến trang feed với thông tin người dùng
         // NOTE: Nhớ không gửi thông tin người dùng :))) giờ tao gửi để test xem login thành công hay không thôi nhé
-        String redirectUrl = baseRedirectUrl + "/dashboard?username=" + finalUsername;
+        String redirectUrl = baseRedirectUrl + "/dashboard";
         response.sendRedirect(redirectUrl);
     }
 

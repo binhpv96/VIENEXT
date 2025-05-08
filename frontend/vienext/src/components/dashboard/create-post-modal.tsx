@@ -35,7 +35,7 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
 
         <div className="mb-4 flex items-center space-x-3">
           <Avatar>
-            <AvatarImage src="/placeholder.svg?height=40&width=40&text=DDN" alt="Profile" />
+            <AvatarImage src="/api/placeholder?height=40&width=40&text=DDN" alt="Profile" />
             <AvatarFallback>DDN</AvatarFallback>
           </Avatar>
           <div>
@@ -55,7 +55,7 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
 
         {newPostImage && (
           <div className="mb-4 relative">
-            <img src={newPostImage || "/placeholder.svg"} alt="Post preview" className="rounded-lg w-full h-auto" />
+            <img src={newPostImage || "/api/placeholder"} alt="Post preview" className="rounded-lg w-full h-auto" />
             <Button
               variant="ghost"
               size="icon"
